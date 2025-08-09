@@ -14,14 +14,18 @@
 <!-- QRCode library -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
+<!-- HTML5 QR scanner library -->
+<script src="https://unpkg.com/html5-qrcode@2.3.7/minified/html5-qrcode.min.js"></script>
+
 <style>
   :root {
-    --blue-light: #3b82f6;
-    --blue-dark: #1e40af;
-    --bg-gradient-start: #e0f2fe;
-    --bg-gradient-end: #bae6fd;
+    /* Слегка приглушённая палитра (меньше насыщенного синего) */
+    --blue-light: #60a5a8; /* was #3b82f6 */
+    --blue-dark: #0f766e;  /* was #1e40af */
+    --bg-gradient-start: #eefdfd; /* softer */
+    --bg-gradient-end: #dff7f6;
     --card-bg: #ffffffcc;
-    --shadow: rgba(30, 64, 175, 0.3);
+    --shadow: rgba(15, 118, 110, 0.18);
   }
 
   body {
@@ -29,7 +33,7 @@
     background: linear-gradient(180deg, var(--bg-gradient-start), var(--bg-gradient-end));
     min-height: 100vh;
     padding: 20px;
-    color: #1e40af;
+    color: var(--blue-dark);
   }
 
   .card {
@@ -45,20 +49,20 @@
   }
 
   .btn-primary {
-    background: linear-gradient(90deg, #2563eb, #3b82f6);
+    background: linear-gradient(90deg, #158d88, #60a5a8);
     color: white;
     font-weight: 600;
     border-radius: 12px;
     padding: 12px 20px;
-    box-shadow: 0 4px 14px rgba(59,130,246,0.39);
+    box-shadow: 0 4px 14px rgba(96,165,168,0.28);
     transition: background 0.3s ease;
   }
   .btn-primary:hover {
-    background: linear-gradient(90deg, #1e40af, #2563eb);
+    background: linear-gradient(90deg, #0f766e, #158d88);
   }
   .btn-outline {
-    border: 2px solid #3b82f6;
-    color: #1e40af;
+    border: 2px solid var(--blue-light);
+    color: var(--blue-dark);
     font-weight: 600;
     border-radius: 12px;
     padding: 10px 18px;
@@ -66,21 +70,21 @@
     transition: background 0.3s ease, color 0.3s ease;
   }
   .btn-outline:hover {
-    background: #3b82f6;
+    background: var(--blue-light);
     color: white;
   }
 
   input, select {
     border-radius: 12px;
-    border: 2px solid #3b82f6;
+    border: 2px solid var(--blue-light);
     padding: 10px 15px;
     font-weight: 500;
     outline-offset: 2px;
-    outline-color: #60a5fa;
+    outline-color: #9ee7e3;
     transition: border-color 0.3s ease;
   }
   input:focus, select:focus {
-    border-color: #2563eb;
+    border-color: var(--blue-dark);
   }
 
   header {
@@ -105,12 +109,15 @@
     width: 8px;
   }
   ::-webkit-scrollbar-track {
-    background: #e0f2fe;
+    background: #e6f7f6;
   }
   ::-webkit-scrollbar-thumb {
-    background: #3b82f6;
+    background: var(--blue-light);
     border-radius: 10px;
   }
+
+  /* Small helpers for modals etc */
+  .modal-backdrop { background: rgba(0,0,0,0.4); }
 </style>
 </head>
 <body>
@@ -118,13 +125,17 @@
 <div class="max-w-4xl mx-auto space-y-8">
   <header class="flex items-center justify-between">
     <div class="flex items-center gap-4">
-      <div class="w-16 h-16 rounded-xl bg-gradient-to-r from-blue-600 to-blue-400 flex items-center justify-center font-extrabold text-white text-2xl select-none cursor-default">ES</div>
+      <div class="w-16 h-16 rounded-xl bg-gradient-to-r from-[#158d88] to-[#60a5a8] flex items-center justify-center font-extrabold text-white text-2xl select-none cursor-default">ES</div>
       <div>
-        <div class="text-blue-700 font-semibold text-sm select-none">Euro Standart</div>
+        <div class="text-[var(--blue-dark)] font-semibold text-sm select-none">Euro Standart</div>
         <h1 class="text-3xl font-extrabold leading-tight select-none">Точка розливу — Абонементи води</h1>
       </div>
     </div>
-    <div class="text-blue-600 text-sm select-none">Зворотній осмос • УФ-лампа • Активоване вугілля</div>
+    <div class="flex items-center gap-4">
+      <div class="text-[var(--blue-dark)] text-sm select-none mr-2">Зворотній осмос • УФ-лампа • Активоване вугілля</div>
+      <!-- Info button added -->
+      <button id="btnInfo" class="btn-outline text-sm">Інфо</button>
+    </div>
   </header>
 
   <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -134,8 +145,8 @@
 
       <!-- Регистрация -->
       <div id="view-register" class="fade-in space-y-5">
-        <h2 class="text-xl font-bold text-blue-800">Реєстрація клієнта</h2>
-        <p class="text-blue-700 font-medium">Введіть ім'я та телефон. Можна вказати код запрошення друга.</p>
+        <h2 class="text-xl font-bold text-[var(--blue-dark)]">Реєстрація клієнта</h2>
+        <p class="text-[var(--blue-dark)] font-medium">Введіть ім'я та телефон. Можна вказати код запрошення друга.</p>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
           <input id="regName" type="text" placeholder="Ім'я" autocomplete="name" />
           <input id="regPhone" type="tel" placeholder="Телефон +380..." autocomplete="tel" />
@@ -149,12 +160,12 @@
       <div id="view-user" class="hidden fade-in flex flex-col space-y-6">
         <div class="flex justify-between items-center">
           <div>
-            <div class="text-sm font-semibold text-blue-500 select-none">Ваш індивідуальний код</div>
-            <div id="userCode" class="text-3xl font-extrabold text-blue-900 select-text cursor-text">#0000</div>
+            <div class="text-sm font-semibold text-[var(--blue-dark)] select-none">Ваш індивідуальний код</div>
+            <div id="userCode" class="text-3xl font-extrabold text-[var(--blue-dark)] select-text cursor-text">#0000</div>
           </div>
           <div class="text-right">
-            <div class="text-sm font-semibold text-blue-500 select-none">Баланс</div>
-            <div id="userBalance" class="text-2xl font-extrabold text-blue-900 select-text cursor-default">0 грн</div>
+            <div class="text-sm font-semibold text-[var(--blue-dark)] select-none">Баланс</div>
+            <div id="userBalance" class="text-2xl font-extrabold text-[var(--blue-dark)] select-text cursor-default">0 грн</div>
           </div>
         </div>
 
@@ -179,9 +190,9 @@
       </div>
 
       <!-- QR Код Модал -->
-      <div id="qrModal" class="fixed inset-0 bg-black/40 flex items-center justify-center p-4 hidden z-50">
+      <div id="qrModal" class="fixed inset-0 modal-backdrop flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-lg relative">
-          <h3 class="text-xl font-bold mb-4 text-blue-900">Ваш QR-код</h3>
+          <h3 class="text-xl font-bold mb-4 text-[var(--blue-dark)]">Ваш QR-код</h3>
           <canvas id="qrCanvas" class="qr-canvas mx-auto mb-4"></canvas>
           <button id="btnCloseQR" class="btn-outline w-full">Закрити</button>
         </div>
@@ -191,20 +202,25 @@
 
     <!-- Адмінка -->
     <aside class="card space-y-6 min-h-[440px]">
-      <h2 class="text-xl font-bold text-blue-800 select-none">Адмін-панель</h2>
-      <p class="text-blue-700 font-medium select-none">Увійдіть для обробки заявок і керування користувачами.</p>
+      <h2 class="text-xl font-bold text-[var(--blue-dark)] select-none">Адмін-панель</h2>
+      <p class="text-[var(--blue-dark)] font-medium select-none">Увійдіть для обробки заявок і керування користувачами.</p>
 
       <button id="btnAdminLogin" class="btn-primary w-full">Увійти (адмін)</button>
 
       <div id="adminPanel" class="hidden flex flex-col space-y-4">
         <div>
-          <h3 class="text-lg font-semibold text-blue-700 select-none mb-2">Заявки на поповнення</h3>
-          <div id="topupsList" class="max-h-48 overflow-y-auto rounded border border-blue-300 p-3 space-y-3 bg-white"></div>
+          <h3 class="text-lg font-semibold text-[var(--blue-dark)] select-none mb-2">Заявки на поповнення</h3>
+          <div id="topupsList" class="max-h-48 overflow-y-auto rounded border border-[#cfeeea] p-3 space-y-3 bg-white"></div>
         </div>
 
         <div>
-          <h3 class="text-lg font-semibold text-blue-700 select-none mb-2">Користувачі</h3>
-          <div id="usersList" class="max-h-64 overflow-y-auto rounded border border-blue-300 p-3 space-y-3 bg-white"></div>
+          <h3 class="text-lg font-semibold text-[var(--blue-dark)] select-none mb-2">Користувачі</h3>
+          <div id="usersList" class="max-h-64 overflow-y-auto rounded border border-[#cfeeea] p-3 space-y-3 bg-white"></div>
+        </div>
+
+        <!-- Scan QR button for admin -->
+        <div>
+          <button id="btnScanQR" class="btn-outline w-full">Сканувати QR</button>
         </div>
 
         <button id="btnAdminLogout" class="btn-outline w-full">Вийти з адмінки</button>
@@ -213,7 +229,7 @@
 
   </main>
 
-  <footer class="text-center text-blue-600 text-sm select-none">© Euro Standart — Система розливу води</footer>
+  <footer class="text-center text-[var(--blue-dark)] text-sm select-none">© Euro Standart — Система розливу води</footer>
 </div>
 
 <!-- Модал: Історія -->
@@ -221,6 +237,52 @@
   <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-lg max-h-[80vh] overflow-y-auto relative">
     <div id="modalContent"></div>
     <button id="modalClose" class="btn-outline mt-6 w-full">Закрити</button>
+  </div>
+</div>
+
+<!-- Admin: Scan modal -->
+<div id="scanModal" class="fixed inset-0 modal-backdrop flex items-center justify-center p-4 hidden z-50">
+  <div class="bg-white rounded-2xl p-6 max-w-xl w-full shadow-lg relative">
+    <h3 class="text-xl font-bold mb-3 text-[var(--blue-dark)]">Сканер QR — Адмін</h3>
+    <div id="qrScannerRegion" class="w-full mb-4" style="min-height:260px"></div>
+    <div id="scanInfo" class="text-[var(--blue-dark)] mb-4"></div>
+    <div class="flex gap-3">
+      <button id="btnStopScan" class="btn-outline flex-1">Зупинити скан</button>
+      <button id="btnCloseScan" class="btn-primary flex-1">Закрити</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin: After-scan user action modal -->
+<div id="scanUserModal" class="fixed inset-0 modal-backdrop flex items-center justify-center p-4 hidden z-60">
+  <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-lg relative">
+    <h3 class="text-xl font-bold mb-3 text-[var(--blue-dark)]" id="scanUserTitle">Користувач</h3>
+    <div id="scanUserContent" class="mb-4 text-[var(--blue-dark)]"></div>
+
+    <div class="grid grid-cols-1 gap-3">
+      <input id="adminAdjustAmount" type="number" placeholder="Сума для зарахування (грн)" />
+      <div class="flex gap-2">
+        <button id="btnAdminConfirmPay" class="btn-primary flex-1">Підтвердити оплату</button>
+        <button id="btnAdminCancelPay" class="btn-outline flex-1">Відхилити</button>
+      </div>
+      <button id="btnCloseScanUser" class="btn-outline w-full">Закрити</button>
+    </div>
+  </div>
+</div>
+
+<!-- Info modal (header) -->
+<div id="infoModal" class="fixed inset-0 modal-backdrop flex items-center justify-center p-4 hidden z-50">
+  <div class="bg-white rounded-2xl p-6 max-w-2xl w-full shadow-lg relative">
+    <h3 class="text-2xl font-bold mb-3 text-[var(--blue-dark)]">Про воду та сервіс Euro Standart</h3>
+    <div class="text-[var(--blue-dark)] space-y-3">
+      <p><strong>Чому наша вода — корисна:</strong> Ми використовуємо багатоступеневу систему очищення: зворотній осмос, УФ-лампу та активоване вугілля — для видалення домішок, хлору та мікроорганізмів.</p>
+      <p><strong>Як працює сервіс:</strong> Ви реєструєтеся, поповнюєте баланс (через заявку) та приходите на точку розливу. Адмін сканує ваш QR-код та зараховує оплату в моменті.</p>
+      <p><strong>Чому це зручно:</strong> Проста реєстрація, історія операцій, бонуси за запрошених друзів та швидка обробка поповнень адміністратором прямо на точці.</p>
+      <p><strong>Навіщо це корисно:</strong> Контроль якості, швидке обслуговування та зручна система бонусів — усе в одній простій веб-адмінці.</p>
+    </div>
+    <div class="mt-6">
+      <button id="btnCloseInfo" class="btn-primary w-full">Закрити</button>
+    </div>
   </div>
 </div>
 
@@ -248,9 +310,50 @@
   const btnCloseQR = $('btnCloseQR');
   btnCloseQR.onclick = () => hide(qrModal);
 
+  /* Scan Modal elements */
+  const scanModal = $('scanModal');
+  const qrScannerRegion = $('qrScannerRegion');
+  const scanInfo = $('scanInfo');
+  const btnStopScan = $('btnStopScan');
+  const btnCloseScan = $('btnCloseScan');
+
+  const scanUserModal = $('scanUserModal');
+  const scanUserTitle = $('scanUserTitle');
+  const scanUserContent = $('scanUserContent');
+  const adminAdjustAmount = $('adminAdjustAmount');
+  const btnAdminConfirmPay = $('btnAdminConfirmPay');
+  const btnAdminCancelPay = $('btnAdminCancelPay');
+  const btnCloseScanUser = $('btnCloseScanUser');
+
+  /* Info modal */
+  const infoModal = $('infoModal');
+  const btnInfo = $('btnInfo');
+  const btnCloseInfo = $('btnCloseInfo');
+
+  if (btnInfo) btnInfo.onclick = () => show(infoModal);
+  if (btnCloseInfo) btnCloseInfo.onclick = () => hide(infoModal);
+
+  if (btnCloseInfo) { /* already handled above */ }
+  // If btnCloseInfo missing (we created it), attach here
+  if (!btnCloseInfo) {
+    // create handler for dynamically present button
+    document.addEventListener('click', e => {
+      if (e.target && e.target.id === 'btnCloseInfo') hide(infoModal);
+    });
+  }
+
+  btnStopScan.onclick = () => stopScanner();
+  btnCloseScan.onclick = () => {
+    stopScanner();
+    hide(scanModal);
+  };
+
+  btnCloseScanUser.onclick = () => hide(scanUserModal);
+
   /* State */
   let currentUserCode = localStorage.getItem('es_current_code') || null;
   let isAdmin = false;
+  let html5QrcodeScanner = null;
 
   /* Load data or init */
   function safeParseJSON(str) {
@@ -325,16 +428,16 @@
     const topupsList = $('topupsList');
     topupsList.innerHTML = '';
     if (!topups.length) {
-      topupsList.innerHTML = '<p class="text-blue-500 select-none">Немає заявок на поповнення</p>';
+      topupsList.innerHTML = '<p class="text-[var(--blue-dark)] select-none">Немає заявок на поповнення</p>';
     } else {
       topups.forEach(t => {
         const u = byCode(t.code) || { name: '—' };
         const div = document.createElement('div');
-        div.className = 'flex justify-between items-center bg-blue-50 rounded p-2';
+        div.className = 'flex justify-between items-center bg-[#e8fbfa] rounded p-2';
         div.innerHTML = `
           <div>
-            <p class="font-semibold text-blue-700">${escapeHtml(u.name)} <span class="text-sm text-blue-400">(${escapeHtml(t.code)})</span></p>
-            <p class="text-sm text-blue-600">Сума: <strong>${t.amount} грн</strong> — заявка</p>
+            <p class="font-semibold text-[var(--blue-dark)]">${escapeHtml(u.name)} <span class="text-sm text-[#6bbfbc]">(${escapeHtml(t.code)})</span></p>
+            <p class="text-sm text-[var(--blue-dark)]">Сума: <strong>${t.amount} грн</strong> — заявка</p>
           </div>
           <div class="flex gap-2">
             <button class="btn-primary btn-proc px-3 py-1 rounded" data-id="${t.id}">Підтвердити</button>
@@ -349,18 +452,18 @@
     const usersList = $('usersList');
     usersList.innerHTML = '';
     if (!DB.users.length) {
-      usersList.innerHTML = '<p class="text-blue-500 select-none">Немає користувачів</p>';
+      usersList.innerHTML = '<p class="text-[var(--blue-dark)] select-none">Немає користувачів</p>';
     } else {
       DB.users.forEach(u => {
         const div = document.createElement('div');
-        div.className = 'flex flex-col gap-1 p-2 rounded border border-blue-200 bg-blue-50';
+        div.className = 'flex flex-col gap-1 p-2 rounded border border-[#cfeeea] bg-[#f7fffe]';
         div.innerHTML = `
           <div class="flex justify-between items-center">
             <div>
-              <p class="font-semibold text-blue-700">${escapeHtml(u.name)}</p>
-              <p class="text-sm text-blue-600 select-text">${escapeHtml(u.phone)}</p>
-              <p class="text-sm text-blue-600 select-text">Код: <strong>${u.code}</strong></p>
-              <p class="text-sm text-blue-700 font-semibold">Баланс: ${fmt(u.balance)}</p>
+              <p class="font-semibold text-[var(--blue-dark)]">${escapeHtml(u.name)}</p>
+              <p class="text-sm text-[var(--blue-dark)] select-text">${escapeHtml(u.phone)}</p>
+              <p class="text-sm text-[var(--blue-dark)] select-text">Код: <strong>${u.code}</strong></p>
+              <p class="text-sm text-[var(--blue-dark)] font-semibold">Баланс: ${fmt(u.balance)}</p>
             </div>
             <div class="flex flex-col gap-2">
               <button class="btn-outline btn-adjust px-3 py-1 rounded" data-code="${u.code}">Регул.</button>
@@ -430,261 +533,4 @@
         user.balance += 10;
         user.history.push({ date: now(), type: 'Бонус 10 грн (перше поповнення)', amount: 10 });
         DB.subscriptions.push(user.code);
-      }
-      t.processed = true;
-      saveData();
-      alert(`Поповнення ${t.amount} грн підтверджено.\nБаланс оновлено.`);
-    } else {
-      DB.topups.splice(idx, 1);
-      alert('Заявка відхилена та видалена.');
-    }
-    renderAdminPanel();
-  }
-
-  /* Регулюємо баланс */
-  function adjustBalance(code, sum, reason = 'Адмін корекція') {
-    const user = byCode(code);
-    if (!user) return alert('Користувача не знайдено');
-    user.balance = (user.balance || 0) + sum;
-    if (!user.history) user.history = [];
-    user.history.push({ date: now(), type: reason, amount: sum });
-    saveData();
-  }
-
-  /* Історія */
-  function showHistoryModal(user) {
-    if (!user.history || user.history.length === 0) {
-      modalContent.innerHTML = `<p class="text-blue-700">Історія відсутня.</p>`;
-    } else {
-      const rows = user.history
-        .slice().reverse()
-        .map(h => {
-          const d = new Date(h.date);
-          const dt = d.toLocaleString('uk-UA', { dateStyle: 'short', timeStyle: 'short' });
-          const amt = h.amount >= 0 ? `+${h.amount} грн` : `${h.amount} грн`;
-          return `<li><strong>${escapeHtml(h.type)}</strong> — ${amt} <span class="text-xs text-blue-400">(${dt})</span></li>`;
-        }).join('');
-      modalContent.innerHTML = `<ul class="list-disc pl-5 text-blue-800">${rows}</ul>`;
-    }
-    show(modal);
-  }
-
-  /* QR Modal */
-  function showQRModal(code) {
-    qrModal.classList.remove('hidden');
-    qrCanvas.width = 180;
-    qrCanvas.height = 180;
-    QRCode.toCanvas(qrCanvas, code, { width: 180 }, err => {
-      if (err) console.error(err);
-    });
-  }
-
-  /* Регистрация */
-  function registerUser(name, phone, inviteCode) {
-    name = name.trim();
-    phone = phone.trim();
-    inviteCode = inviteCode.trim();
-    if (!name || !phone) {
-      alert('Введіть ім\'я та телефон');
-      return null;
-    }
-    // Проверка телефона (украинский формат +380...)
-    if (!/^(\+?380\d{9})$/.test(phone)) {
-      alert('Телефон повинен бути у форматі +380XXXXXXXXX');
-      return null;
-    }
-    // Проверяем, есть ли пользователь с таким телефоном
-    let existingUser = DB.users.find(u => u.phone === phone);
-    if (existingUser) {
-      alert('Цей телефон вже зареєстрований. Ви автоматично увійдете.');
-      currentUserCode = existingUser.code;
-      localStorage.setItem('es_current_code', currentUserCode);
-      saveData();
-      return existingUser;
-    }
-
-    const newCode = genCode();
-
-    // Создаем пользователя
-    const user = {
-      id: Date.now(),
-      name,
-      phone,
-      code: newCode,
-      balance: 0,
-      history: []
-    };
-
-    DB.users.push(user);
-
-    // Бонус за приглашение
-    if (inviteCode) {
-      const inviter = byCode(inviteCode);
-      if (inviter) {
-        inviter.balance += 10;
-        inviter.history.push({ date: now(), type: `Реферальний бонус (+10 грн)`, amount: 10 });
-        user.balance += 10; // и сам приглашенный тоже бонус
-        user.history.push({ date: now(), type: 'Реферальний бонус за вхід (+10 грн)', amount: 10 });
-      }
-    }
-
-    saveData();
-    currentUserCode = newCode;
-    localStorage.setItem('es_current_code', currentUserCode);
-
-    return user;
-  }
-
-  /* Вхід по коду */
-  function loginByCode(code) {
-    code = code.trim();
-    if (!code.startsWith('#')) code = '#' + code;
-    const user = byCode(code);
-    if (!user) {
-      alert('Користувача з таким кодом не знайдено');
-      return null;
-    }
-    currentUserCode = user.code;
-    localStorage.setItem('es_current_code', currentUserCode);
-    return user;
-  }
-
-  /* Выход */
-  function logout() {
-    currentUserCode = null;
-    isAdmin = false;
-    localStorage.removeItem('es_current_code');
-    renderRegisterView();
-    hide($('adminPanel'));
-  }
-
-  /* Пополнение заявки */
-  function createTopupRequest(amount) {
-    if (!currentUserCode) return alert('Ви не увійшли');
-    amount = Number(amount);
-    if (isNaN(amount) || amount <= 0) {
-      alert('Введіть коректну суму');
-      return;
-    }
-    DB.topups.push({
-      id: Date.now(),
-      code: currentUserCode,
-      amount,
-      processed: false,
-      date: now()
-    });
-    saveData();
-    alert('Заявка на поповнення створена. Очікуйте підтвердження адміна.');
-  }
-
-  /* Подписки (для примера) */
-  function subscribe(type) {
-    alert(`Підписка ${type} - поки не реалізовано.`);
-  }
-
-  /* Показываем историю */
-  function showUserHistory() {
-    if (!currentUserCode) return alert('Ви не увійшли');
-    const user = byCode(currentUserCode);
-    if (!user) return alert('Користувача не знайдено');
-    showHistoryModal(user);
-  }
-
-  /* Показать QR код для пользователя */
-  function showUserQR() {
-    if (!currentUserCode) return alert('Ви не увійшли');
-    showQRModal(currentUserCode);
-  }
-
-  /* Отобразить бонусы и рефералов */
-  function showBonusInfo() {
-    if (!currentUserCode) return alert('Ви не увійшли');
-    const user = byCode(currentUserCode);
-    if (!user) return alert('Користувача не знайдено');
-
-    const inviterCodes = DB.users.filter(u => u.history.some(h => h.type.includes('Реферальний бонус (+10 грн)') && u.code !== currentUserCode));
-    const html = `
-      <p><strong>Ваш код:</strong> ${user.code}</p>
-      <p><strong>Баланс:</strong> ${fmt(user.balance)}</p>
-      <p>За перше поповнення – бонус 10 грн.</p>
-      <p>За кожного друга, який використає ваш код, ви отримуєте 10 грн.</p>
-      <p>Використайте ваш код, щоб запросити друзів: <strong>${user.code}</strong></p>
-    `;
-    modalContent.innerHTML = html;
-    show(modal);
-  }
-
-  /* Сканирование QR не реализуемо в чистом HTML/JS без сервера или внешнего API */
-
-  /* Инициализация */
-  function init() {
-    DB = loadData();
-
-    if (currentUserCode && byCode(currentUserCode)) {
-      renderUserView(currentUserCode);
-    } else {
-      renderRegisterView();
-    }
-
-    // События
-
-    $('btnReg').onclick = () => {
-      const name = $('regName').value;
-      const phone = $('regPhone').value;
-      const invite = $('regInvite').value;
-      const user = registerUser(name, phone, invite);
-      if (user) renderUserView(user.code);
-    };
-
-    $('btnUseCode').onclick = () => {
-      const code = prompt('Введіть ваш унікальний код (4 цифри з #)');
-      if (!code) return;
-      const user = loginByCode(code);
-      if (user) renderUserView(user.code);
-    };
-
-    $('btnLogout').onclick = () => {
-      logout();
-    };
-
-    $('btnTopup').onclick = () => {
-      const sumStr = prompt('Введіть суму для поповнення (грн)');
-      if (!sumStr) return;
-      createTopupRequest(sumStr);
-    };
-
-    $('btnHistory').onclick = () => {
-      showUserHistory();
-    };
-
-    $('btnQR').onclick = () => {
-      showUserQR();
-    };
-
-    $('btnSubscribeWeek').onclick = () => subscribe('щотижнева');
-    $('btnSubscribeMonth').onclick = () => subscribe('щомісячна');
-
-    $('btnShare').onclick = () => showBonusInfo();
-
-    $('btnAdminLogin').onclick = () => {
-      const pass = prompt('Введіть адмін-код');
-      if (pass === 'admin123') {
-        isAdmin = true;
-        renderAdminPanel();
-      } else {
-        alert('Невірний адмін-код');
-      }
-    };
-
-    $('btnAdminLogout').onclick = () => {
-      isAdmin = false;
-      hide($('adminPanel'));
-    };
-  }
-
-  init();
-})();
-</script>
-
-</body>
-</html>
+   
