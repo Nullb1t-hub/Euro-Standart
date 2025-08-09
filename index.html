@@ -512,4 +512,190 @@
       УФ-лампа знешкоджує мікроорганізми.<br />
       Активоване вугілля покращує смак і прибирає запахи.<br /><br />
       <strong>Адреса видачі води:</strong><br />
-      Київ, проспект Європейського Союзу, 19/3
+      Київ, проспект Європейського Союзу, 19/3</p>
+    `);
+  });
+
+  /* Пополнение баланса (заявка) */
+  el('btnTopup').addEventListener('click', () => {
+    openModal(`
+      <div class="modal-header">Заявка на поповнення</div>
+      <p>Для поповнення зверніться на пункт видачі за адресою:<br />
+      <strong>Київ, проспект Європейського Союзу, 19/3</strong></p>
+      <p>Відскануйте QR-код у адмінпанелі або надайте код користувача адміністратору.</p>
+    `);
+  });
+
+  /* QR-код пользователя */
+  el('btnQR').addEventListener('click', () => {
+    const user = byCode(currentUserCode);
+    if(!user) return alert("Не знайдено користувача");
+    const qrData = JSON.stringify({ code: user.code, phone: user.phone, name: user.name });
+    // Генерируем QR-код через библиотеку
+    openModal(`
+      <div class="modal-header">Ваш QR-код</div>
+      <div id="qr-code" class="qr-code"></div>
+      <p style="text-align:center; margin-top: 12px;">Покажіть цей QR-код адміністратору для поповнення або списання</p>
+    `);
+    // Создаем QR код (используем библиотеку QRCode.js)
+    if(window.QRCode) {
+      new QRCode(document.getElementById("qr-code"), {
+        text: qrData,
+        width: 180,
+        height: 180,
+      });
+    } else {
+      // Загрузка QRCode.js
+      const script = document.createElement('script');
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
+      script.onload = () => {
+        new QRCode(document.getElementById("qr-code"), {
+          text: qrData,
+          width: 180,
+          height: 180,
+        });
+      };
+      document.body.appendChild(script);
+    }
+  });
+
+  /* Admin login */
+  const ADMIN_PASS = 'admin123';
+  el('adminPassword').addEventListener('input', () => {
+    el('btnAdminLogin').disabled = el('adminPassword').value !== ADMIN_PASS;
+  });
+  el('btnAdminLogin').addEventListener('click', () => {
+    el('adminPassword').value = '';
+    el('btnAdminLogin').disabled = true;
+    localStorage.setItem('es_is_admin', '1');
+    renderAdminSection();
+  });
+  el('btnAdminLogout').addEventListener('click', () => {
+    localStorage.removeItem('es_is_admin');
+    renderRegisterSection();
+    hide(el('adminPanelContent'));
+    hide(el('btnAdminLogout'));
+    show(el('adminPassword'));
+    show(el('btnAdminLogin'));
+  });
+
+  /* Render admin section */
+  function renderAdminSection(){
+    if(localStorage.getItem('es_is_admin') !== '1'){
+      hide(el('adminPanelContent'));
+      hide(el('btnAdminLogout'));
+      show(el('adminPassword'));
+      show(el('btnAdminLogin'));
+      return;
+    }
+    hide(el('register-section'));
+    hide(el('user-section'));
+    show(el('admin-section'));
+    show(el('adminPanelContent'));
+    show(el('btnAdminLogout'));
+    hide(el('adminPassword'));
+    hide(el('btnAdminLogin'));
+    renderUsersList();
+  }
+
+  /* Render users list in admin */
+  function renderUsersList(){
+    const container = el('adminUsersList');
+    container.innerHTML = '';
+    DB.users.forEach(user => {
+      const div = document.createElement('div');
+      div.className = 'admin-user-item';
+      div.innerHTML = `
+        <div class="admin-user-info">
+          <div><b>${escapeHtml(user.name)}</b> (${escapeHtml(user.phone)})</div>
+          <div>Баланс: ${fmt(user.balance)} | Код: ${escapeHtml(user.code)}</div>
+        </div>
+        <div>
+          <input type="number" min="1" placeholder="Сума" class="input-inline" id="topup-${user.code}" />
+          <button class="admin-btn" data-code="${user.code}">Поповнити</button>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+
+    // Навешиваем обработчики пополнения
+    [...container.querySelectorAll('.admin-btn')].forEach(btn => {
+      btn.addEventListener('click', () => {
+        const code = btn.getAttribute('data-code');
+        const inp = el('topup-' + code);
+        const sum = Number(inp.value);
+        if(!sum || sum <= 0) {
+          alert('Вкажіть коректну суму');
+          return;
+        }
+        const user = byCode(code);
+        if(!user) return alert('Користувача не знайдено');
+        user.balance += sum;
+        user.history.push({ type: 'Поповнення (адмін)', amount: sum, time: now() });
+        saveData(DB);
+        renderUsersList();
+        alert(`Баланс користувача ${user.name} поповнено на ${sum} грн`);
+      });
+    });
+  }
+
+  /* Запуск при загрузке */
+  if(localStorage.getItem('es_is_admin') === '1'){
+    renderAdminSection();
+  }
+
+  /* QR Scanner в админке */
+  const qrScannerBtn = el('btnScanQR');
+  const qrScannerContainer = el('qrScannerContainer');
+  const qrReaderDiv = el('qr-reader');
+  const qrCloseBtn = el('btnCloseQR');
+  let html5QrcodeScanner = null;
+
+  qrScannerBtn.addEventListener('click', () => {
+    qrScannerContainer.classList.remove('hidden');
+    qrScannerBtn.disabled = true;
+    if(html5QrcodeScanner) return;
+    html5QrcodeScanner = new Html5Qrcode("qr-reader");
+    html5QrcodeScanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
+      qrCodeMessage => {
+        // При успешном сканировании
+        const user = byCode(qrCodeMessage);
+        if(!user) {
+          alert(`Не знайдено користувача з кодом: ${qrCodeMessage}`);
+          return;
+        }
+        // Подтверждение пополнения
+        let sumStr = prompt(`Користувач: ${user.name}\nТелефон: ${user.phone}\nВведіть суму для поповнення`);
+        let sum = Number(sumStr);
+        if(sum && sum > 0){
+          user.balance += sum;
+          user.history.push({ type: 'Поповнення (скан QR)', amount: sum, time: now() });
+          saveData(DB);
+          alert(`Баланс користувача ${user.name} поповнено на ${sum} грн`);
+          renderUsersList();
+        } else {
+          alert('Невірна сума');
+        }
+      },
+      errorMessage => {
+        // console.log("QR scan error:", errorMessage);
+      }
+    ).catch(err => {
+      alert("Помилка запуску камери: " + err);
+    });
+  });
+
+  qrCloseBtn.addEventListener('click', () => {
+    if(html5QrcodeScanner) {
+      html5QrcodeScanner.stop().then(() => {
+        qrScannerContainer.classList.add('hidden');
+        qrScannerBtn.disabled = false;
+      }).catch(err => alert(err));
+    }
+  });
+</script>
+
+</body>
+</html>
