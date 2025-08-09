@@ -4,687 +4,512 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Euro Standart — Абонементи води</title>
-
-<!-- Tailwind CSS CDN -->
 <script src="https://cdn.tailwindcss.com"></script>
-
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-
-<!-- QRCode library -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+<!-- QR Scanner библиотека -->
+<script src="https://unpkg.com/html5-qrcode" defer></script>
 <style>
   :root {
-    --blue-light: #3b82f6;
-    --blue-dark: #1e40af;
-    --bg-gradient-start: #e0f2fe;
-    --bg-gradient-end: #bae6fd;
-    --card-bg: #ffffffcc;
-    --shadow: rgba(30, 64, 175, 0.3);
+    --bg-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --btn-gradient: linear-gradient(90deg, #00c6ff, #0072ff);
+    --card-bg: rgba(255 255 255 / 0.9);
   }
-
   body {
     font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(180deg, var(--bg-gradient-start), var(--bg-gradient-end));
     min-height: 100vh;
-    padding: 20px;
-    color: #1e40af;
+    margin: 0;
+    background: var(--bg-gradient);
+    color: #222;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 8px;
   }
-
-  .card {
+  header {
+    width: 100%;
+    max-width: 420px;
     background: var(--card-bg);
-    border-radius: 20px;
-    box-shadow: 0 10px 25px var(--shadow);
-    backdrop-filter: saturate(180%) blur(12px);
-    padding: 20px;
-    transition: box-shadow 0.3s ease;
+    border-radius: 16px;
+    box-shadow: 0 6px 15px rgb(0 0 0 / 0.1);
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
   }
-  .card:hover {
-    box-shadow: 0 15px 40px var(--shadow);
+  header::before {
+    content: "";
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 150px; height: 150px;
+    background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Water_drop_icon.svg/120px-Water_drop_icon.svg.png') no-repeat center/contain;
+    opacity: 0.08;
+    pointer-events: none;
+    filter: drop-shadow(0 0 2px #0072ff);
+    border-radius: 50%;
   }
-
-  .btn-primary {
-    background: linear-gradient(90deg, #2563eb, #3b82f6);
+  .logo {
+    font-weight: 800;
+    font-size: 28px;
+    color: #0072ff;
+    user-select: none;
+  }
+  .info-btn {
+    background: var(--btn-gradient);
     color: white;
+    padding: 10px 14px;
+    border-radius: 14px;
     font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    user-select: none;
+    border: none;
+  }
+  .info-btn:hover {
+    background: #005ec6;
+  }
+  main {
+    max-width: 420px;
+    width: 100%;
+    background: var(--card-bg);
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgb(0 0 0 / 0.12);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  input, button {
+    font-family: inherit;
+  }
+  input {
+    width: 100%;
+    padding: 12px 16px;
     border-radius: 12px;
-    padding: 12px 20px;
-    box-shadow: 0 4px 14px rgba(59,130,246,0.39);
+    border: 2px solid #0072ff;
+    outline-offset: 2px;
+    outline-color: transparent;
+    transition: outline-color 0.25s ease;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+  input:focus {
+    outline-color: #00c6ff;
+  }
+  button {
+    background: var(--btn-gradient);
+    border: none;
+    color: white;
+    padding: 14px 0;
+    border-radius: 16px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
     transition: background 0.3s ease;
   }
-  .btn-primary:hover {
-    background: linear-gradient(90deg, #1e40af, #2563eb);
+  button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
   }
-  .btn-outline {
-    border: 2px solid #3b82f6;
-    color: #1e40af;
-    font-weight: 600;
-    border-radius: 12px;
-    padding: 10px 18px;
+  button:hover:not(:disabled) {
+    background: #005ec6;
+  }
+  .btn-secondary {
     background: transparent;
-    transition: background 0.3s ease, color 0.3s ease;
+    border: 2px solid #0072ff;
+    color: #0072ff;
   }
-  .btn-outline:hover {
-    background: #3b82f6;
+  .btn-secondary:hover {
+    background: #0072ff;
     color: white;
   }
-
-  input, select {
+  .section-title {
+    font-weight: 700;
+    font-size: 22px;
+    margin-bottom: 12px;
+    color: #004a9f;
+    text-align: center;
+  }
+  .hidden {
+    display: none !important;
+  }
+  .user-code {
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-align: center;
+    margin-bottom: 16px;
+    color: #0072ff;
+  }
+  .balance {
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #004a9f;
+  }
+  .button-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 2000;
+  }
+  .modal {
+    position: fixed;
+    z-index: 2100;
+    top: 50%;
+    left: 50%;
+    max-width: 380px;
+    width: 90%;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgb(0 0 0 / 0.3);
+    transform: translate(-50%, -50%);
+    padding: 24px 20px 20px;
+    overflow-y: auto;
+    max-height: 80vh;
+    font-size: 16px;
+    color: #222;
+  }
+  .modal-header {
+    font-weight: 700;
+    font-size: 22px;
+    margin-bottom: 16px;
+    color: #0072ff;
+    text-align: center;
+  }
+  .modal-close-btn {
+    margin-top: 20px;
+    background: var(--btn-gradient);
+    width: 100%;
+  }
+  .qr-container {
+    margin: 12px 0;
+    text-align: center;
+  }
+  .qr-code {
+    width: 180px;
+    height: 180px;
+    margin: 0 auto;
+  }
+  .admin-users-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+  }
+  .admin-user-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid #ddd;
+  }
+  .admin-user-info {
+    font-weight: 600;
+  }
+  .admin-btn {
+    background: #0072ff;
+    border: none;
+    color: white;
+    padding: 8px 10px;
     border-radius: 12px;
-    border: 2px solid #3b82f6;
-    padding: 10px 15px;
-    font-weight: 500;
-    outline-offset: 2px;
-    outline-color: #60a5fa;
-    transition: border-color 0.3s ease;
+    font-size: 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.3s ease;
   }
-  input:focus, select:focus {
-    border-color: #2563eb;
+  .admin-btn:hover {
+    background: #005ec6;
   }
-
-  header {
-    margin-bottom: 25px;
+  .input-inline {
+    width: 70px;
+    padding: 8px 12px;
+    margin-left: 10px;
+    border: 1px solid #0072ff;
+    border-radius: 12px;
+    font-size: 16px;
   }
-
-  .fade-in {
-    animation: fadeInUp 0.5s ease forwards;
+  .info-text {
+    text-align: center;
+    color: #004a9f;
+    font-size: 15px;
+    margin-bottom: 12px;
   }
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .qr-canvas {
-    margin: auto;
-    display: block;
-  }
-
-  /* Scrollbars */
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-  ::-webkit-scrollbar-track {
-    background: #e0f2fe;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: #3b82f6;
-    border-radius: 10px;
+  .footer {
+    margin-top: 40px;
+    font-size: 14px;
+    color: #bbb;
+    user-select: none;
   }
 </style>
 </head>
 <body>
 
-<div class="max-w-4xl mx-auto space-y-8">
-  <header class="flex items-center justify-between">
-    <div class="flex items-center gap-4">
-      <div class="w-16 h-16 rounded-xl bg-gradient-to-r from-blue-600 to-blue-400 flex items-center justify-center font-extrabold text-white text-2xl select-none cursor-default">ES</div>
-      <div>
-        <div class="text-blue-700 font-semibold text-sm select-none">Euro Standart</div>
-        <h1 class="text-3xl font-extrabold leading-tight select-none">Точка розливу — Абонементи води</h1>
+<header>
+  <div class="logo">Euro Standart</div>
+  <button id="btnInfo" class="info-btn" aria-label="Інформація про воду">Інфо</button>
+</header>
+
+<main>
+  <!-- Регистрация -->
+  <section id="register-section" class="">
+    <div class="section-title">Реєстрація клієнта</div>
+    <input id="regName" type="text" placeholder="Ім'я" autocomplete="off" />
+    <input id="regPhone" type="tel" placeholder="Телефон +380..." autocomplete="off" />
+    <input id="regInvite" type="text" placeholder="Код запрошення (необов'язково)" autocomplete="off" />
+    <button id="btnReg" disabled>Зареєструватися</button>
+    <button id="btnUseCode" class="btn-secondary">Увійти по коду</button>
+  </section>
+
+  <!-- Личный кабинет пользователя -->
+  <section id="user-section" class="hidden">
+    <div class="user-code" id="userCode">#0000</div>
+    <div class="balance" id="userBalance">0 грн</div>
+    <div class="button-group">
+      <button id="btnTopup">Поповнити (заявка)</button>
+      <button id="btnQR" class="btn-secondary">QR-код</button>
+      <button id="btnLogout" class="btn-secondary">Вийти</button>
+    </div>
+    <div class="button-group" style="margin-top: 16px;">
+      <button id="btnHistory" class="btn-secondary" style="flex:1;">Історія</button>
+    </div>
+  </section>
+
+  <!-- Админ панель -->
+  <section id="admin-section" class="hidden" style="margin-top: 20px;">
+    <div class="section-title">Адмін-панель</div>
+    <div class="info-text">Введіть адмін-код для доступу</div>
+    <input id="adminPassword" type="password" placeholder="Пароль admin123" autocomplete="off" />
+    <button id="btnAdminLogin" disabled>Увійти</button>
+    <button id="btnAdminLogout" class="btn-secondary hidden">Вийти з адмінки</button>
+
+    <div id="adminPanelContent" class="hidden">
+      <div class="admin-users-list" id="adminUsersList"></div>
+      <div style="text-align:center;">
+        <button id="btnScanQR" class="admin-btn" style="margin-bottom:12px;">Сканер QR-кодів</button>
+      </div>
+      <div id="qrScannerContainer" class="hidden" style="text-align:center;">
+        <div id="qr-reader" style="width: 300px; margin: 0 auto;"></div>
+        <button id="btnCloseQR" class="admin-btn" style="margin-top:10px;">Закрити сканер</button>
       </div>
     </div>
-    <div class="text-blue-600 text-sm select-none">Зворотній осмос • УФ-лампа • Активоване вугілля</div>
-  </header>
+  </section>
+</main>
 
-  <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div id="modal-root"></div>
 
-    <!-- Регистрация / Пользователь -->
-    <section class="lg:col-span-2 card relative min-h-[440px]">
-
-      <!-- Регистрация -->
-      <div id="view-register" class="fade-in space-y-5">
-        <h2 class="text-xl font-bold text-blue-800">Реєстрація клієнта</h2>
-        <p class="text-blue-700 font-medium">Введіть ім'я та телефон. Можна вказати код запрошення друга.</p>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
-          <input id="regName" type="text" placeholder="Ім'я" autocomplete="name" />
-          <input id="regPhone" type="tel" placeholder="Телефон +380..." autocomplete="tel" />
-          <input id="regInvite" type="text" placeholder="Код запрошення (необов'язково)" class="md:col-span-2" autocomplete="off" />
-          <button id="btnReg" class="btn-primary md:col-span-1">Зареєструватися</button>
-          <button id="btnUseCode" class="btn-outline md:col-span-1">Увійти по коду</button>
-        </div>
-      </div>
-
-      <!-- Пользователь -->
-      <div id="view-user" class="hidden fade-in flex flex-col space-y-6">
-        <div class="flex justify-between items-center">
-          <div>
-            <div class="text-sm font-semibold text-blue-500 select-none">Ваш індивідуальний код</div>
-            <div id="userCode" class="text-3xl font-extrabold text-blue-900 select-text cursor-text">#0000</div>
-          </div>
-          <div class="text-right">
-            <div class="text-sm font-semibold text-blue-500 select-none">Баланс</div>
-            <div id="userBalance" class="text-2xl font-extrabold text-blue-900 select-text cursor-default">0 грн</div>
-          </div>
-        </div>
-
-        <div class="flex gap-4 flex-wrap">
-          <button id="btnTopup" class="btn-primary flex-1 min-w-[160px]">Поповнити (заявка)</button>
-          <button id="btnHistory" class="btn-outline flex-1 min-w-[160px]">Історія</button>
-          <button id="btnQR" class="btn-outline flex-1 min-w-[160px]">Показати QR-код</button>
-        </div>
-
-        <div class="flex gap-4 flex-wrap">
-          <button id="btnSubscribeWeek" class="btn-outline flex-1 min-w-[160px]">Підписка: щотижня</button>
-          <button id="btnSubscribeMonth" class="btn-outline flex-1 min-w-[160px]">Підписка: щомісяця</button>
-        </div>
-
-        <div>
-          <button id="btnShare" class="btn-primary w-full">Бонуси та реферальне</button>
-        </div>
-
-        <div>
-          <button id="btnLogout" class="btn-outline w-full">Вийти</button>
-        </div>
-      </div>
-
-      <!-- QR Код Модал -->
-      <div id="qrModal" class="fixed inset-0 bg-black/40 flex items-center justify-center p-4 hidden z-50">
-        <div class="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-lg relative">
-          <h3 class="text-xl font-bold mb-4 text-blue-900">Ваш QR-код</h3>
-          <canvas id="qrCanvas" class="qr-canvas mx-auto mb-4"></canvas>
-          <button id="btnCloseQR" class="btn-outline w-full">Закрити</button>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- Адмінка -->
-    <aside class="card space-y-6 min-h-[440px]">
-      <h2 class="text-xl font-bold text-blue-800 select-none">Адмін-панель</h2>
-      <p class="text-blue-700 font-medium select-none">Увійдіть для обробки заявок і керування користувачами.</p>
-
-      <button id="btnAdminLogin" class="btn-primary w-full">Увійти (адмін)</button>
-
-      <div id="adminPanel" class="hidden flex flex-col space-y-4">
-        <div>
-          <h3 class="text-lg font-semibold text-blue-700 select-none mb-2">Заявки на поповнення</h3>
-          <div id="topupsList" class="max-h-48 overflow-y-auto rounded border border-blue-300 p-3 space-y-3 bg-white"></div>
-        </div>
-
-        <div>
-          <h3 class="text-lg font-semibold text-blue-700 select-none mb-2">Користувачі</h3>
-          <div id="usersList" class="max-h-64 overflow-y-auto rounded border border-blue-300 p-3 space-y-3 bg-white"></div>
-        </div>
-
-        <button id="btnAdminLogout" class="btn-outline w-full">Вийти з адмінки</button>
-      </div>
-    </aside>
-
-  </main>
-
-  <footer class="text-center text-blue-600 text-sm select-none">© Euro Standart — Система розливу води</footer>
-</div>
-
-<!-- Модал: Історія -->
-<div id="modal" class="fixed inset-0 bg-black/30 flex items-center justify-center p-4 hidden z-40">
-  <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-lg max-h-[80vh] overflow-y-auto relative">
-    <div id="modalContent"></div>
-    <button id="modalClose" class="btn-outline mt-6 w-full">Закрити</button>
-  </div>
-</div>
+<footer class="footer">© Euro Standart — Система розливу води</footer>
 
 <script>
-(() => {
   const STORAGE_KEY = 'eurostandart_v2';
 
-  /* Data structure */
-  let DB = null;
-
-  /* DOM helpers */
-  const $ = id => document.getElementById(id);
-  const show = el => el.classList.remove('hidden');
-  const hide = el => el.classList.add('hidden');
-
-  /* Modal */
-  const modal = $('modal');
-  const modalContent = $('modalContent');
-  const modalClose = $('modalClose');
-  modalClose.onclick = () => hide(modal);
-
-  /* QR Modal */
-  const qrModal = $('qrModal');
-  const qrCanvas = $('qrCanvas');
-  const btnCloseQR = $('btnCloseQR');
-  btnCloseQR.onclick = () => hide(qrModal);
-
-  /* State */
-  let currentUserCode = localStorage.getItem('es_current_code') || null;
-  let isAdmin = false;
-
-  /* Load data or init */
-  function safeParseJSON(str) {
-    try { return JSON.parse(str); }
-    catch { return null; }
+  function safeParseJSON(s) {
+    try { return JSON.parse(s); } catch (e) { return null; }
   }
+
   function loadData() {
     const raw = localStorage.getItem(STORAGE_KEY);
     const parsed = safeParseJSON(raw);
-    if (!parsed || !parsed.users || !parsed.topups || !parsed.subscriptions) {
-      const base = { users: [], topups: [], subscriptions: [] };
+    if(!parsed) {
+      const base = { users: [], topups: [] };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(base));
       return base;
     }
+    parsed.users = parsed.users || [];
+    parsed.topups = parsed.topups || [];
     return parsed;
   }
-  function saveData() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(DB));
+  function saveData(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
+
+  let DB = loadData();
+
+  function genCode(){
+    return '#' + Math.floor(1000 + Math.random()*9000);
   }
 
-  function genCode() {
-    let code;
-    do {
-      code = '#' + Math.floor(1000 + Math.random() * 9000);
-    } while (DB.users.find(u => u.code === code));
-    return code;
-  }
-
-  function byCode(code) {
+  function byCode(code){
     return DB.users.find(u => u.code === code);
   }
 
-  function fmt(n) {
-    return (Number(n) || 0) + ' грн';
+  function fmt(n){
+    return (Number(n)||0) + ' грн';
   }
 
-  function now() {
+  function now(){
     return Date.now();
+  }
+
+  /* UI helpers */
+  const el = id => document.getElementById(id);
+
+  function show(el){
+    el.classList.remove('hidden');
+  }
+  function hide(el){
+    el.classList.add('hidden');
+  }
+
+  /* MODAL */
+  const modalRoot = el('modal-root');
+  function openModal(contentHtml) {
+    const modalOverlay = document.createElement('div');
+    modalOverlay.className = 'modal-backdrop';
+    modalOverlay.addEventListener('click', () => closeModal());
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = contentHtml;
+    modalOverlay.appendChild(modal);
+    modalRoot.appendChild(modalOverlay);
+    // Add close button inside modal if not already
+    if(!modal.querySelector('.modal-close-btn')){
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'modal-close-btn';
+      closeBtn.textContent = 'Закрити';
+      closeBtn.addEventListener('click', () => closeModal());
+      modal.appendChild(closeBtn);
+    }
+  }
+  function closeModal() {
+    modalRoot.innerHTML = '';
   }
 
   /* Escape HTML */
   function escapeHtml(s) {
-    if (s === undefined || s === null) return '';
-    return String(s).replace(/[&<>"']/g, c =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
-    );
+    if(s === undefined || s === null) return '';
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[c]);
   }
 
-  /* Render */
-
-  function renderUserView(code) {
-    const user = byCode(code);
-    if (!user) return alert('Користувача не знайдено');
-    hide($('view-register'));
-    show($('view-user'));
-
-    $('userCode').textContent = user.code;
-    $('userBalance').textContent = fmt(user.balance);
+  /* Регистрация - валидация кнопки */
+  function validateRegister() {
+    const name = el('regName').value.trim();
+    const phone = el('regPhone').value.trim();
+    el('btnReg').disabled = !(name.length > 1 && /^\+380\d{9}$/.test(phone));
   }
+  el('regName').addEventListener('input', validateRegister);
+  el('regPhone').addEventListener('input', validateRegister);
 
-  function renderRegisterView() {
-    hide($('view-user'));
-    show($('view-register'));
-  }
+  /* Регистрация - кнопка */
+  el('btnReg').addEventListener('click', () => {
+    const name = el('regName').value.trim();
+    const phone = el('regPhone').value.trim();
+    const invite = el('regInvite').value.trim();
 
-  function renderAdminPanel() {
-    // Show admin panel UI and fill users and topups
-    show($('adminPanel'));
+    if(!name || !phone) return alert("Вкажіть ім'я та телефон");
+    if(!/^\+380\d{9}$/.test(phone)) return alert("Телефон має бути у форматі +380XXXXXXXXX");
 
-    // Topups list
-    const topups = DB.topups.filter(t => !t.processed);
-    const topupsList = $('topupsList');
-    topupsList.innerHTML = '';
-    if (!topups.length) {
-      topupsList.innerHTML = '<p class="text-blue-500 select-none">Немає заявок на поповнення</p>';
-    } else {
-      topups.forEach(t => {
-        const u = byCode(t.code) || { name: '—' };
-        const div = document.createElement('div');
-        div.className = 'flex justify-between items-center bg-blue-50 rounded p-2';
-        div.innerHTML = `
-          <div>
-            <p class="font-semibold text-blue-700">${escapeHtml(u.name)} <span class="text-sm text-blue-400">(${escapeHtml(t.code)})</span></p>
-            <p class="text-sm text-blue-600">Сума: <strong>${t.amount} грн</strong> — заявка</p>
-          </div>
-          <div class="flex gap-2">
-            <button class="btn-primary btn-proc px-3 py-1 rounded" data-id="${t.id}">Підтвердити</button>
-            <button class="btn-outline btn-rej px-3 py-1 rounded" data-id="${t.id}">Відхилити</button>
-          </div>
-        `;
-        topupsList.appendChild(div);
-      });
-    }
-
-    // Users list
-    const usersList = $('usersList');
-    usersList.innerHTML = '';
-    if (!DB.users.length) {
-      usersList.innerHTML = '<p class="text-blue-500 select-none">Немає користувачів</p>';
-    } else {
-      DB.users.forEach(u => {
-        const div = document.createElement('div');
-        div.className = 'flex flex-col gap-1 p-2 rounded border border-blue-200 bg-blue-50';
-        div.innerHTML = `
-          <div class="flex justify-between items-center">
-            <div>
-              <p class="font-semibold text-blue-700">${escapeHtml(u.name)}</p>
-              <p class="text-sm text-blue-600 select-text">${escapeHtml(u.phone)}</p>
-              <p class="text-sm text-blue-600 select-text">Код: <strong>${u.code}</strong></p>
-              <p class="text-sm text-blue-700 font-semibold">Баланс: ${fmt(u.balance)}</p>
-            </div>
-            <div class="flex flex-col gap-2">
-              <button class="btn-outline btn-adjust px-3 py-1 rounded" data-code="${u.code}">Регул.</button>
-              <button class="btn-outline btn-viewhist px-3 py-1 rounded" data-code="${u.code}">Іст.</button>
-              <button class="btn-outline btn-populateqr px-3 py-1 rounded" data-code="${u.code}">QR</button>
-            </div>
-          </div>
-        `;
-        usersList.appendChild(div);
-      });
-    }
-
-    // Attach button handlers for topups
-    document.querySelectorAll('.btn-proc').forEach(btn => {
-      btn.onclick = () => processTopup(Number(btn.dataset.id), true);
-    });
-    document.querySelectorAll('.btn-rej').forEach(btn => {
-      btn.onclick = () => processTopup(Number(btn.dataset.id), false);
-    });
-
-    // Attach button handlers for users list
-    document.querySelectorAll('.btn-adjust').forEach(btn => {
-      btn.onclick = () => {
-        const code = btn.dataset.code;
-        const sumStr = prompt('Введіть суму (від\'ємне число для списання)', '100');
-        if (!sumStr) return;
-        const sum = Number(sumStr);
-        if (isNaN(sum)) {
-          alert('Некоректна сума');
-          return;
-        }
-        adjustBalance(code, sum, 'Ручна корекція');
-        alert('Баланс змінено');
-        renderAdminPanel();
-      };
-    });
-    document.querySelectorAll('.btn-viewhist').forEach(btn => {
-      btn.onclick = () => {
-        const code = btn.dataset.code;
-        const user = byCode(code);
-        if (!user) return alert('Користувача не знайдено');
-        showHistoryModal(user);
-      };
-    });
-    document.querySelectorAll('.btn-populateqr').forEach(btn => {
-      btn.onclick = () => {
-        const code = btn.dataset.code;
-        showQRModal(code);
-      };
-    });
-  }
-
-  /* Process topup: confirmed or rejected */
-  function processTopup(id, confirm) {
-    const idx = DB.topups.findIndex(t => t.id === id);
-    if (idx === -1) return alert('Заявка не знайдена');
-    if (confirm) {
-      // Поповнюємо баланс користувача
-      const t = DB.topups[idx];
-      const user = byCode(t.code);
-      if (!user) return alert('Користувача не знайдено');
-      user.balance = (user.balance || 0) + t.amount;
-      if (!user.history) user.history = [];
-      user.history.push({ date: now(), type: 'Поповнення (адмін)', amount: t.amount });
-      // Якщо перше поповнення, +10 бонус
-      if (!DB.subscriptions.includes(user.code)) {
-        user.balance += 10;
-        user.history.push({ date: now(), type: 'Бонус 10 грн (перше поповнення)', amount: 10 });
-        DB.subscriptions.push(user.code);
-      }
-      t.processed = true;
-      saveData();
-      alert(`Поповнення ${t.amount} грн підтверджено.\nБаланс оновлено.`);
-    } else {
-      DB.topups.splice(idx, 1);
-      alert('Заявка відхилена та видалена.');
-    }
-    renderAdminPanel();
-  }
-
-  /* Регулюємо баланс */
-  function adjustBalance(code, sum, reason = 'Адмін корекція') {
-    const user = byCode(code);
-    if (!user) return alert('Користувача не знайдено');
-    user.balance = (user.balance || 0) + sum;
-    if (!user.history) user.history = [];
-    user.history.push({ date: now(), type: reason, amount: sum });
-    saveData();
-  }
-
-  /* Історія */
-  function showHistoryModal(user) {
-    if (!user.history || user.history.length === 0) {
-      modalContent.innerHTML = `<p class="text-blue-700">Історія відсутня.</p>`;
-    } else {
-      const rows = user.history
-        .slice().reverse()
-        .map(h => {
-          const d = new Date(h.date);
-          const dt = d.toLocaleString('uk-UA', { dateStyle: 'short', timeStyle: 'short' });
-          const amt = h.amount >= 0 ? `+${h.amount} грн` : `${h.amount} грн`;
-          return `<li><strong>${escapeHtml(h.type)}</strong> — ${amt} <span class="text-xs text-blue-400">(${dt})</span></li>`;
-        }).join('');
-      modalContent.innerHTML = `<ul class="list-disc pl-5 text-blue-800">${rows}</ul>`;
-    }
-    show(modal);
-  }
-
-  /* QR Modal */
-  function showQRModal(code) {
-    qrModal.classList.remove('hidden');
-    qrCanvas.width = 180;
-    qrCanvas.height = 180;
-    QRCode.toCanvas(qrCanvas, code, { width: 180 }, err => {
-      if (err) console.error(err);
-    });
-  }
-
-  /* Регистрация */
-  function registerUser(name, phone, inviteCode) {
-    name = name.trim();
-    phone = phone.trim();
-    inviteCode = inviteCode.trim();
-    if (!name || !phone) {
-      alert('Введіть ім\'я та телефон');
-      return null;
-    }
-    // Проверка телефона (украинский формат +380...)
-    if (!/^(\+?380\d{9})$/.test(phone)) {
-      alert('Телефон повинен бути у форматі +380XXXXXXXXX');
-      return null;
-    }
-    // Проверяем, есть ли пользователь с таким телефоном
-    let existingUser = DB.users.find(u => u.phone === phone);
-    if (existingUser) {
-      alert('Цей телефон вже зареєстрований. Ви автоматично увійдете.');
-      currentUserCode = existingUser.code;
-      localStorage.setItem('es_current_code', currentUserCode);
-      saveData();
-      return existingUser;
-    }
-
-    const newCode = genCode();
-
-    // Создаем пользователя
-    const user = {
-      id: Date.now(),
-      name,
-      phone,
-      code: newCode,
-      balance: 0,
-      history: []
-    };
-
-    DB.users.push(user);
-
-    // Бонус за приглашение
-    if (inviteCode) {
-      const inviter = byCode(inviteCode);
-      if (inviter) {
-        inviter.balance += 10;
-        inviter.history.push({ date: now(), type: `Реферальний бонус (+10 грн)`, amount: 10 });
-        user.balance += 10; // и сам приглашенный тоже бонус
-        user.history.push({ date: now(), type: 'Реферальний бонус за вхід (+10 грн)', amount: 10 });
-      }
-    }
-
-    saveData();
-    currentUserCode = newCode;
-    localStorage.setItem('es_current_code', currentUserCode);
-
-    return user;
-  }
-
-  /* Вхід по коду */
-  function loginByCode(code) {
-    code = code.trim();
-    if (!code.startsWith('#')) code = '#' + code;
-    const user = byCode(code);
-    if (!user) {
-      alert('Користувача з таким кодом не знайдено');
-      return null;
-    }
-    currentUserCode = user.code;
-    localStorage.setItem('es_current_code', currentUserCode);
-    return user;
-  }
-
-  /* Выход */
-  function logout() {
-    currentUserCode = null;
-    isAdmin = false;
-    localStorage.removeItem('es_current_code');
-    renderRegisterView();
-    hide($('adminPanel'));
-  }
-
-  /* Пополнение заявки */
-  function createTopupRequest(amount) {
-    if (!currentUserCode) return alert('Ви не увійшли');
-    amount = Number(amount);
-    if (isNaN(amount) || amount <= 0) {
-      alert('Введіть коректну суму');
+    // Проверка уникальности телефона
+    if(DB.users.find(u => u.phone === phone)){
+      alert("Користувач з таким телефоном вже існує. Будь ласка, увійдіть по коду.");
       return;
     }
-    DB.topups.push({
-      id: Date.now(),
-      code: currentUserCode,
-      amount,
-      processed: false,
-      date: now()
-    });
-    saveData();
-    alert('Заявка на поповнення створена. Очікуйте підтвердження адміна.');
-  }
 
-  /* Подписки (для примера) */
-  function subscribe(type) {
-    alert(`Підписка ${type} - поки не реалізовано.`);
-  }
+    // Создаем пользователя
+    let code;
+    do {
+      code = genCode();
+    } while(byCode(code));
+    const user = {
+      id: now(),
+      name,
+      phone,
+      code,
+      balance: 0,
+      history: [],
+      invitedBy: invite || null,
+      firstTopupDone: false
+    };
+    DB.users.push(user);
 
-  /* Показываем историю */
-  function showUserHistory() {
-    if (!currentUserCode) return alert('Ви не увійшли');
-    const user = byCode(currentUserCode);
-    if (!user) return alert('Користувача не знайдено');
-    showHistoryModal(user);
-  }
-
-  /* Показать QR код для пользователя */
-  function showUserQR() {
-    if (!currentUserCode) return alert('Ви не увійшли');
-    showQRModal(currentUserCode);
-  }
-
-  /* Отобразить бонусы и рефералов */
-  function showBonusInfo() {
-    if (!currentUserCode) return alert('Ви не увійшли');
-    const user = byCode(currentUserCode);
-    if (!user) return alert('Користувача не знайдено');
-
-    const inviterCodes = DB.users.filter(u => u.history.some(h => h.type.includes('Реферальний бонус (+10 грн)') && u.code !== currentUserCode));
-    const html = `
-      <p><strong>Ваш код:</strong> ${user.code}</p>
-      <p><strong>Баланс:</strong> ${fmt(user.balance)}</p>
-      <p>За перше поповнення – бонус 10 грн.</p>
-      <p>За кожного друга, який використає ваш код, ви отримуєте 10 грн.</p>
-      <p>Використайте ваш код, щоб запросити друзів: <strong>${user.code}</strong></p>
-    `;
-    modalContent.innerHTML = html;
-    show(modal);
-  }
-
-  /* Сканирование QR не реализуемо в чистом HTML/JS без сервера или внешнего API */
-
-  /* Инициализация */
-  function init() {
-    DB = loadData();
-
-    if (currentUserCode && byCode(currentUserCode)) {
-      renderUserView(currentUserCode);
-    } else {
-      renderRegisterView();
+    // бонус пригласителю
+    if(invite) {
+      const inviter = byCode(invite);
+      if(inviter){
+        inviter.balance += 10;
+        inviter.history.push({ type:'Реферальний бонус (реєстрація)', amount:10, time: now() });
+      }
     }
 
-    // События
+    saveData(DB);
+    setCurrentUser(code);
+    renderUserSection();
+  });
 
-    $('btnReg').onclick = () => {
-      const name = $('regName').value;
-      const phone = $('regPhone').value;
-      const invite = $('regInvite').value;
-      const user = registerUser(name, phone, invite);
-      if (user) renderUserView(user.code);
-    };
+  /* Войти по коду */
+  el('btnUseCode').addEventListener('click', () => {
+    const code = prompt('Введіть свій код (наприклад #1234)');
+    if(!code) return;
+    const user = byCode(code.trim());
+    if(!user) {
+      alert('Користувача з таким кодом не знайдено');
+      return;
+    }
+    setCurrentUser(user.code);
+    renderUserSection();
+  });
 
-    $('btnUseCode').onclick = () => {
-      const code = prompt('Введіть ваш унікальний код (4 цифри з #)');
-      if (!code) return;
-      const user = loginByCode(code);
-      if (user) renderUserView(user.code);
-    };
-
-    $('btnLogout').onclick = () => {
-      logout();
-    };
-
-    $('btnTopup').onclick = () => {
-      const sumStr = prompt('Введіть суму для поповнення (грн)');
-      if (!sumStr) return;
-      createTopupRequest(sumStr);
-    };
-
-    $('btnHistory').onclick = () => {
-      showUserHistory();
-    };
-
-    $('btnQR').onclick = () => {
-      showUserQR();
-    };
-
-    $('btnSubscribeWeek').onclick = () => subscribe('щотижнева');
-    $('btnSubscribeMonth').onclick = () => subscribe('щомісячна');
-
-    $('btnShare').onclick = () => showBonusInfo();
-
-    $('btnAdminLogin').onclick = () => {
-      const pass = prompt('Введіть адмін-код');
-      if (pass === 'admin123') {
-        isAdmin = true;
-        renderAdminPanel();
-      } else {
-        alert('Невірний адмін-код');
-      }
-    };
-
-    $('btnAdminLogout').onclick = () => {
-      isAdmin = false;
-      hide($('adminPanel'));
-    };
+  /* Текущий пользователь */
+  let currentUserCode = localStorage.getItem('es_current_code') || null;
+  function setCurrentUser(code){
+    currentUserCode = code;
+    localStorage.setItem('es_current_code', code);
   }
 
-  init();
-})();
-</script>
+  /* Выход пользователя */
+  el('btnLogout').addEventListener('click', () => {
+    localStorage.removeItem('es_current_code');
+    currentUserCode = null;
+    renderRegisterSection();
+  });
 
-</body>
-</html>
+  /* Рендер страницы пользователя */
+  function renderUserSection(){
+    if(!currentUserCode){
+      renderRegisterSection();
+      return;
+    }
+    const user = byCode(currentUserCode);
+    if(!user){
+      renderRegisterSection();
+      return;
+    }
+    hide(el('register-section'));
+    hide(el('admin-section'));
+    show(el('user-section'));
+    el('userCode').textContent = user.code;
+    el('userBalance').textContent = fmt(user.balance);
+  }
+
+  /* Рендер страницы регистрации */
+  function renderRegisterSection(){
+    hide(el('user-section'));
+    hide(el('admin-section'));
+    show(el('register-section'));
+  }
+
+  /* Автоматический вход, если есть в localStorage */
+  if(currentUserCode && byCode(currentUserCode)){
+    renderUserSection();
+  } else {
+    renderRegisterSection();
+  }
+
+  /* Инфо модалка */
+  el('btnInfo').addEventListener('click', () => {
+    openModal(`
+      <div class="modal-header">Про воду</div>
+      <p>Зворотній осмос видаляє розчинені домішки і метали.<br />
+      УФ-лампа знешкоджує мікроорганізми.<br />
+      Активоване вугілля покращує смак і прибирає запахи.<br /><br />
+      <strong>Адреса видачі води:</strong><br />
+      Київ, проспект Європейського Союзу, 19/3
