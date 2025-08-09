@@ -1,1 +1,427 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Euro Standart — Абонементи води</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#f3e8ff; --bg2:#eef2ff; --card:#ffffff; --muted:#64748b;
+    --accent1:#7c3aed; --accent2:#a78bfa;
+  }
+  body{font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto; background:linear-gradient(180deg,var(--bg1),var(--bg2)); min-height:100vh; padding:24px;}
+  .card{background:linear-gradient(180deg,var(--card),#fbfbff); border-radius:18px; box-shadow: 0 10px 30px rgba(15,23,42,0.08);}
+  .brand{background:linear-gradient(90deg,var(--accent1),var(--accent2)); color:white}
+  .btn-accent{background:linear-gradient(90deg,var(--accent1),var(--accent2)); color:white}
+  .glass{backdrop-filter: blur(6px); background: rgba(255,255,255,0.6);}
+  .small {font-size:13px}
+  .fade-up{transform:translateY(8px); opacity:0; animation:fu .45s ease forwards}
+  @keyframes fu{to{transform:none; opacity:1}}
+</style>
+</head>
+<body>
+<div class="max-w-3xl mx-auto space-y-6">
+  <header class="flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-xl brand flex items-center justify-center font-bold text-xl">ES</div>
+      <div>
+        <div class="text-sm text-slate-500">Euro Standart</div>
+        <div class="text-2xl font-extrabold">Точка розливу — Абонементи</div>
+      </div>
+    </div>
+    <div class="text-right small text-slate-500">Зворотній осмос • УФ-лампа • Активоване вугілля</div>
+  </header>
 
+  <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Left: Registration / User -->
+    <section class="lg:col-span-2 card p-6 space-y-4">
+      <!-- register view -->
+      <div id="view-register" class="fade-up">
+        <h3 class="text-lg font-semibold">Реєстрація клієнта</h3>
+        <p class="small text-slate-600">Введи ім'я та телефон. Можна код запрошення.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+          <input id="regName" placeholder="Ім'я" class="p-3 rounded-lg border" />
+          <input id="regPhone" placeholder="Телефон +380..." class="p-3 rounded-lg border" />
+          <input id="regInvite" placeholder="Код запрошення (необов'язково)" class="p-3 rounded-lg border md:col-span-2" />
+          <button id="btnReg" class="md:col-span-1 btn-accent py-3 rounded-lg font-semibold">Зареєструватися</button>
+          <button id="btnUseCode" class="md:col-span-1 py-3 rounded-lg border">Увійти по коду</button>
+        </div>
+      </div>
+
+      <!-- user view -->
+      <div id="view-user" class="hidden space-y-3 fade-up">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="small text-slate-500">Ваш індивідуальний код</div>
+            <div id="userCode" class="text-2xl font-bold">#0000</div>
+          </div>
+          <div class="text-right">
+            <div class="small text-slate-500">Баланс</div>
+            <div id="userBalance" class="text-xl font-bold">0 грн</div>
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <button id="btnTopup" class="flex-1 py-3 rounded-lg btn-accent">Поповнити (заявка)</button>
+          <button id="btnHistory" class="py-3 px-4 rounded-lg border">Історія</button>
+        </div>
+
+        <div class="flex gap-3">
+          <button id="btnSubscribeWeek" class="flex-1 py-3 rounded-lg border">Підписка: щотижня</button>
+          <button id="btnSubscribeMonth" class="flex-1 py-3 rounded-lg border">Підписка: щомісяця</button>
+        </div>
+
+        <div class="pt-2">
+          <button id="btnInfo" class="w-full py-3 rounded-lg glass border">Інформація про воду</button>
+        </div>
+
+        <div>
+          <button id="btnShare" class="w-full py-3 rounded-lg btn-accent">Бонуси та реферальне</button>
+        </div>
+      </div>
+
+      <!-- history modal area -->
+      <div id="panel-area"></div>
+    </section>
+
+    <!-- Right: About + Admin -->
+    <aside class="card p-6 space-y-4">
+      <div>
+        <h4 class="font-semibold">Про систему очищення</h4>
+        <p class="small text-slate-600 mt-2">Багатоступеневий зворотний осмос — видаляє солі та важкі метали. УФ-лампа — дезінфекція без хімії. Активоване вугілля — покращує смак і прибирає хлор.</p>
+      </div>
+
+      <div class="pt-4">
+        <h4 class="font-semibold">Адмін-панель</h4>
+        <p class="small text-slate-600">Увійди для обробки заявок і керування балансами.</p>
+        <div class="mt-3 flex gap-2">
+          <button id="btnAdmin" class="flex-1 py-2 rounded-lg border">Увійти (адмін)</button>
+          <button id="btnExport" class="py-2 px-3 rounded-lg border">Експорт</button>
+        </div>
+        <div class="mt-3">
+          <button id="btnImport" class="w-full py-2 rounded-lg border">Імпорт даних (JSON)</button>
+        </div>
+      </div>
+
+      <div class="pt-4 small text-slate-500">
+        <div><strong>Бонуси:</strong> реферальна реєстрація +10 грн на рахунок того, хто запросив. Перший прооpцесований платіж нового користувача — +10 грн бонус новому клієнту.</div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="text-center small text-slate-500 mt-2">© Euro Standart — Система розливу води</footer>
+</div>
+
+<!-- MODALS / TEMPLATES -->
+<div id="modals"></div>
+
+<script>
+/* ========= Storage model (local) ========= */
+const STORAGE_KEY = 'eurostandart_v1';
+
+/* safe parse */
+function safeParseJSON(s){
+  try{ return JSON.parse(s); }catch(e){ return null; }
+}
+
+function loadData(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  const parsed = safeParseJSON(raw);
+  if(!parsed) {
+    const base = { users: [], topups: [], subscriptions: [] };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(base));
+    return base;
+  }
+  // ensure shape
+  parsed.users = parsed.users || [];
+  parsed.topups = parsed.topups || [];
+  parsed.subscriptions = parsed.subscriptions || [];
+  return parsed;
+}
+function saveData(d){ localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
+
+let DB = loadData();
+
+/* helpers */
+function genCode(){ return '#' + Math.floor(1000 + Math.random()*9000); }
+function byCode(code){ return DB.users.find(u => u.code === code); }
+function fmt(n){ return (Number(n)||0) + ' грн'; }
+function now(){ return Date.now(); }
+
+/* UI hooks */
+const el = id => document.getElementById(id);
+const show = elid => { document.querySelectorAll(elid).forEach(e => e.classList.remove('hidden')); };
+const hide = elid => { document.querySelectorAll(elid).forEach(e => e.classList.add('hidden')); };
+
+/* init */
+let currentUserCode = localStorage.getItem('es_current_code') || null;
+
+/* ============ Registration / Login ============ */
+el('btnReg').addEventListener('click', ()=>{
+  const name = el('regName').value.trim();
+  const phone = el('regPhone').value.trim();
+  const invite = el('regInvite').value.trim();
+  if(!name || !phone){ alert('Вкажи ім\'я та телефон'); return; }
+  const code = genCode();
+  const user = { id: Date.now(), name, phone, code, balance: 0, history: [], invitedBy: invite || null, firstTopupDone: false, subs: [] };
+  DB.users.push(user);
+  // referral immediate bonus to inviter
+  if(invite){
+    const inviter = DB.users.find(u => u.code === invite);
+    if(inviter){
+      inviter.balance = (Number(inviter.balance) || 0) + 10;
+      inviter.history.push({ type:'Реферальний бонус (реєстрація)', amount:10, time: now() });
+    }
+  }
+  saveData(DB);
+  currentUserCode = code;
+  localStorage.setItem('es_current_code', code);
+  renderUserView(code);
+});
+
+el('btnUseCode').addEventListener('click', ()=>{
+  const code = prompt('Введіть код (наприклад #1234)');
+  if(!code) return;
+  const u = byCode(code.trim());
+  if(!u){ alert('Користувача не знайдено'); return; }
+  currentUserCode = u.code;
+  localStorage.setItem('es_current_code', u.code);
+  renderUserView(u.code);
+});
+
+/* ============ Render user view ============ */
+function renderUserView(code){
+  const user = byCode(code);
+  if(!user) return alert('Користувача не знайдено');
+  // hide register, show user
+  document.getElementById('view-register').classList.add('hidden');
+  document.getElementById('view-user').classList.remove('hidden');
+  // set fields
+  el('userCode').innerText = user.code;
+  el('userBalance').innerText = fmt(user.balance);
+}
+
+/* auto-open */
+if(currentUserCode && byCode(currentUserCode)) renderUserView(currentUserCode);
+
+/* ============ Info modal ============ */
+el('btnInfo').addEventListener('click', ()=>{
+  openModal(`<h3 class="text-lg font-semibold">Про воду</h3>
+    <p class="small text-slate-600 mt-2">Зворотній осмос видаляє розчинені домішки і метали. УФ-лампа знешкоджує мікроорганізми. Активоване вугілля покращує смак і прибирає запахи.</p>
+    `);
+});
+
+/* ============ Topup request ============ */
+el('btnTopup').addEventListener('click', ()=>{
+  const code = currentUserCode;
+  if(!code) return alert('Спочатку зареєструйтеся або увійдіть по коду');
+  const amount = Number(prompt('Введіть суму поповнення (грн)', '100'));
+  if(!amount || amount <= 0) return;
+  const t = { id: Date.now(), code, amount: Number(amount), created: now(), processed: false };
+  DB.topups.push(t);
+  saveData(DB);
+  alert('Заявка на поповнення створена. Підійдіть на точку та скажіть адміністратору код заявки або ваш індивідуальний код.');
+});
+
+/* ============ History panel ============ */
+el('btnHistory').addEventListener('click', ()=>{
+  const code = currentUserCode;
+  if(!code) return alert('Спочатку увійдіть');
+  const u = byCode(code);
+  if(!u) return alert('Не знайдено');
+  const html = `
+    <h3 class="text-lg font-semibold mb-2">Історія транзакцій</h3>
+    <div class="space-y-2 max-h-56 overflow-auto p-2">
+      ${ (u.history && u.history.length) ? u.history.slice().reverse().map(h => `<div class="p-2 bg-slate-50 rounded"><div class="text-xs text-slate-500">${escapeHtml(h.type)}</div><div class="font-medium">${escapeHtml(h.amount)} грн — ${new Date(h.time).toLocaleString()}</div></div>`).join('') : '<div class="text-slate-500 small">Порожньо</div>' }
+    </div>
+  `;
+  openModal(html);
+});
+
+/* ============ Subscriptions ============ */
+function addSubscription(code, period){
+  const u = byCode(code);
+  if(!u) return alert('Не знайдено');
+  const sub = { id: Date.now(), code, period, created: now(), lastCharged: null, active: true };
+  DB.subscriptions.push(sub);
+  saveData(DB);
+  alert('Підписка активована. Нарахування проводяться адміністратором вручну (або автоматично при наступній версії).');
+}
+el('btnSubscribeWeek').addEventListener('click', ()=>{ if(!currentUserCode) return alert('Спочатку увійдіть'); addSubscription(currentUserCode, 'weekly'); });
+el('btnSubscribeMonth').addEventListener('click', ()=>{ if(!currentUserCode) return alert('Спочатку увійдіть'); addSubscription(currentUserCode, 'monthly'); });
+
+/* ============ Referral / Share ============ */
+el('btnShare').addEventListener('click', ()=>{
+  if(!currentUserCode) return alert('Спочатку увійдіть');
+  const u = byCode(currentUserCode);
+  if(!u) return;
+  openModal(`<h3 class="font-semibold">Реферальне</h3>
+    <p class="small mt-2">Поділіться кодом: <strong>${u.code}</strong></p>
+    <p class="small mt-2 text-slate-600">Якщо людина зареєструється з цим кодом — ви отримаєте +10 грн.</p>`);
+});
+
+/* ============ Admin panel ============ */
+el('btnAdmin').addEventListener('click', ()=>{
+  const key = prompt('Введіть адмін-код');
+  if(!key) return;
+  // simple auth: адмін код hardcoded = admin123 (можна змінити в коді)
+  if(key !== 'admin123'){ alert('Хибний код'); return; }
+  openAdminPanel();
+});
+
+function openAdminPanel(){
+  // build html listing users and pending topups
+  const usersHtml = DB.users.map(u => `
+    <div class="p-3 bg-slate-50 rounded flex items-center justify-between">
+      <div>
+        <div class="font-semibold">${escapeHtml(u.name)} <span class="text-slate-500 small">(${escapeHtml(u.phone)})</span></div>
+        <div class="small text-slate-500">Код: ${u.code} • Баланс: ${u.balance} грн</div>
+      </div>
+      <div class="flex flex-col gap-2">
+        <button data-code="${u.code}" class="btn-adjust py-1 px-2 rounded border small">Регул.</button>
+        <button data-code="${u.code}" class="btn-view hist py-1 px-2 rounded border small">Іст.</button>
+      </div>
+    </div>`).join('');
+
+  const topupsHtml = DB.topups.filter(t => !t.processed).map(t => {
+    const u = byCode(t.code) || { name: '—' };
+    return `<div class="p-3 bg-white rounded flex items-center justify-between">
+      <div>
+        <div class="font-medium">${escapeHtml(u.name)} <span class="text-slate-500 small">(${t.code})</span></div>
+        <div class="small text-slate-500">${t.amount} грн — заявка</div>
+      </div>
+      <div class="flex gap-2">
+        <button data-id="${t.id}" class="btn-proc py-1 px-2 rounded btn-accent small">Підтвердити</button>
+        <button data-id="${t.id}" class="btn-rej py-1 px-2 rounded border small">Відхилити</button>
+      </div>
+    </div>`; }).join('');
+
+  const html = `
+    <h3 class="text-lg font-semibold mb-2">Адмін-панель</h3>
+    <div class="space-y-3 max-h-[300px] overflow-auto p-2 border rounded mb-3">
+      <h4 class="font-semibold small mb-2">Заявки на поповнення</h4>
+      ${ topupsHtml || '<div class="small text-slate-500">Немає заявок</div>' }
+    </div>
+    <div class="space-y-2 max-h-[300px] overflow-auto p-2 border rounded">
+      <h4 class="font-semibold small mb-2">Користувачі</h4>
+      ${ usersHtml || '<div class="small text-slate-500">Немає користувачів</div>' }
+    </div>
+    <div class="mt-3 text-right">
+      <button id="btnCloseAdmin" class="py-2 px-3 rounded border">Закрити</button>
+    </div>
+  `;
+  openModal(html);
+
+  // attach handlers after rendering modal
+  setTimeout(()=>{
+    document.querySelectorAll('.btn-proc').forEach(b=>{
+      b.addEventListener('click', async (e)=>{
+        const id = Number(b.dataset.id);
+        await processTopup(id, true);
+        closeModal(); openAdminPanel();
+      });
+    });
+    document.querySelectorAll('.btn-rej').forEach(b=>{
+      b.addEventListener('click', async ()=>{
+        const id = Number(b.dataset.id);
+        await processTopup(id, false);
+        closeModal(); openAdminPanel();
+      });
+    });
+    document.querySelectorAll('.btn-adjust').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const code = b.dataset.code;
+        const delta = Number(prompt('Введіть суму (ніжна кількість, мінус для списання)', '100'));
+        if(!delta) return;
+        adjustBalance(code, delta, 'Ручна корекція');
+        alert('Баланс змінено');
+        closeModal(); openAdminPanel();
+      });
+    });
+    document.querySelectorAll('.btn-view.hist').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const code = b.dataset.code;
+        const u = byCode(code);
+        if(!u) return alert('Не знайдено');
+        const histHtml = (u.history && u.history.length) ? u.history.slice().reverse().map(h => `<div class="p-2 bg-slate-50 rounded"><div class="text-xs text-slate-500">${escapeHtml(h.type)}</div><div class="font-medium">${escapeHtml(h.amount)} грн — ${new Date(h.time).toLocaleString()}</div></div>`).join('') : '<div class="small text-slate-500">Порожньо</div>';
+        openModal(`<h3 class="font-semibold">Історія: ${escapeHtml(u.name)}</h3><div class="max-h-56 overflow-auto p-2">${histHtml}</div>`);
+      });
+    });
+    const closeBtn = document.getElementById('btnCloseAdmin');
+    if(closeBtn) closeBtn.addEventListener('click', closeModal);
+  }, 50);
+}
+
+/* process topup: if approve true => add balance and bonus if first topup */
+async function processTopup(id, approve){
+  const t = DB.topups.find(x => x.id === id);
+  if(!t) return alert('Заявка не знайдена');
+  if(!approve){
+    t.processed = true; t.rejected = true; t.processedAt = now();
+    saveData(DB); return;
+  }
+  const u = byCode(t.code);
+  if(!u) return alert('Користувача не знайдено');
+  // add amount
+  u.balance = (Number(u.balance) || 0) + Number(t.amount);
+  u.history.push({ type: 'Поповнення', amount: Number(t.amount), time: now() });
+  // if first topup processed for this user -> give +10 bonus to user
+  if(!u.firstTopupDone){
+    u.balance += 10;
+    u.history.push({ type: 'Бонус за перше поповнення', amount:10, time: now() });
+    u.firstTopupDone = true;
+  }
+  t.processed = true; t.processedAt = now();
+  saveData(DB);
+}
+
+/* adjust balance admin helper */
+function adjustBalance(code, delta, reason){
+  const u = byCode(code);
+  if(!u) return alert('Не знайдено');
+  u.balance = (Number(u.balance) || 0) + Number(delta);
+  u.history.push({ type: reason || 'Ручна зміна', amount: Number(delta), time: now() });
+  saveData(DB);
+}
+
+/* ============ Export / Import ============ */
+el('btnExport').addEventListener('click', ()=>{
+  const data = JSON.stringify(DB, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'eurostandart-data.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+
+el('btnImport').addEventListener('click', ()=>{
+  const raw = prompt('Вставте JSON даних для імпорту (заміна поточних даних). Уважно: це перезапише базу.');
+  if(!raw) return;
+  const parsed = safeParseJSON(raw);
+  if(!parsed) return alert('Невірний JSON');
+  DB = { users: parsed.users || [], topups: parsed.topups || [], subscriptions: parsed.subscriptions || [] };
+  saveData(DB);
+  alert('Імпортовано');
+});
+
+/* ============ Utilities: modal ============ */
+function escapeHtml(s){ if(s===undefined||s===null) return ''; return String(s).replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":\"&#39;\"}[c])); }
+
+function openModal(html){
+  const root = el('modals');
+  root.innerHTML = `<div id="modalWrap" class="fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/30" onclick="closeModal()"></div>
+    <div class="relative w-[92%] max-w-2xl p-4 card">
+      <div>${html}</div>
+      <div class="mt-4 text-right"><button onclick="closeModal()" class="py-2 px-3 rounded border">Закрити</button></div>
+    </div>
+  </div>`;
+}
+function closeModal(){ const root = el('modals'); root.innerHTML = ''; }
+
+/* ======== small safety: keep DB in sync ======== */
+window.addEventListener('storage', ()=>{ DB = loadData(); });
+
+</script>
+</body>
+</html>
