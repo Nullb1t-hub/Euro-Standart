@@ -408,3 +408,283 @@
     document.querySelectorAll('.btn-populateqr').forEach(btn => {
       btn.onclick = () => {
         const code = btn.dataset.code;
+        showQRModal(code);
+      };
+    });
+  }
+
+  /* Process topup: confirmed or rejected */
+  function processTopup(id, confirm) {
+    const idx = DB.topups.findIndex(t => t.id === id);
+    if (idx === -1) return alert('Заявка не знайдена');
+    if (confirm) {
+      // Поповнюємо баланс користувача
+      const t = DB.topups[idx];
+      const user = byCode(t.code);
+      if (!user) return alert('Користувача не знайдено');
+      user.balance = (user.balance || 0) + t.amount;
+      if (!user.history) user.history = [];
+      user.history.push({ date: now(), type: 'Поповнення (адмін)', amount: t.amount });
+      // Якщо перше поповнення, +10 бонус
+      if (!DB.subscriptions.includes(user.code)) {
+        user.balance += 10;
+        user.history.push({ date: now(), type: 'Бонус 10 грн (перше поповнення)', amount: 10 });
+        DB.subscriptions.push(user.code);
+      }
+      t.processed = true;
+      saveData();
+      alert(`Поповнення ${t.amount} грн підтверджено.\nБаланс оновлено.`);
+    } else {
+      DB.topups.splice(idx, 1);
+      alert('Заявка відхилена та видалена.');
+    }
+    renderAdminPanel();
+  }
+
+  /* Регулюємо баланс */
+  function adjustBalance(code, sum, reason = 'Адмін корекція') {
+    const user = byCode(code);
+    if (!user) return alert('Користувача не знайдено');
+    user.balance = (user.balance || 0) + sum;
+    if (!user.history) user.history = [];
+    user.history.push({ date: now(), type: reason, amount: sum });
+    saveData();
+  }
+
+  /* Історія */
+  function showHistoryModal(user) {
+    if (!user.history || user.history.length === 0) {
+      modalContent.innerHTML = `<p class="text-blue-700">Історія відсутня.</p>`;
+    } else {
+      const rows = user.history
+        .slice().reverse()
+        .map(h => {
+          const d = new Date(h.date);
+          const dt = d.toLocaleString('uk-UA', { dateStyle: 'short', timeStyle: 'short' });
+          const amt = h.amount >= 0 ? `+${h.amount} грн` : `${h.amount} грн`;
+          return `<li><strong>${escapeHtml(h.type)}</strong> — ${amt} <span class="text-xs text-blue-400">(${dt})</span></li>`;
+        }).join('');
+      modalContent.innerHTML = `<ul class="list-disc pl-5 text-blue-800">${rows}</ul>`;
+    }
+    show(modal);
+  }
+
+  /* QR Modal */
+  function showQRModal(code) {
+    qrModal.classList.remove('hidden');
+    qrCanvas.width = 180;
+    qrCanvas.height = 180;
+    QRCode.toCanvas(qrCanvas, code, { width: 180 }, err => {
+      if (err) console.error(err);
+    });
+  }
+
+  /* Регистрация */
+  function registerUser(name, phone, inviteCode) {
+    name = name.trim();
+    phone = phone.trim();
+    inviteCode = inviteCode.trim();
+    if (!name || !phone) {
+      alert('Введіть ім\'я та телефон');
+      return null;
+    }
+    // Проверка телефона (украинский формат +380...)
+    if (!/^(\+?380\d{9})$/.test(phone)) {
+      alert('Телефон повинен бути у форматі +380XXXXXXXXX');
+      return null;
+    }
+    // Проверяем, есть ли пользователь с таким телефоном
+    let existingUser = DB.users.find(u => u.phone === phone);
+    if (existingUser) {
+      alert('Цей телефон вже зареєстрований. Ви автоматично увійдете.');
+      currentUserCode = existingUser.code;
+      localStorage.setItem('es_current_code', currentUserCode);
+      saveData();
+      return existingUser;
+    }
+
+    const newCode = genCode();
+
+    // Создаем пользователя
+    const user = {
+      id: Date.now(),
+      name,
+      phone,
+      code: newCode,
+      balance: 0,
+      history: []
+    };
+
+    DB.users.push(user);
+
+    // Бонус за приглашение
+    if (inviteCode) {
+      const inviter = byCode(inviteCode);
+      if (inviter) {
+        inviter.balance += 10;
+        inviter.history.push({ date: now(), type: `Реферальний бонус (+10 грн)`, amount: 10 });
+        user.balance += 10; // и сам приглашенный тоже бонус
+        user.history.push({ date: now(), type: 'Реферальний бонус за вхід (+10 грн)', amount: 10 });
+      }
+    }
+
+    saveData();
+    currentUserCode = newCode;
+    localStorage.setItem('es_current_code', currentUserCode);
+
+    return user;
+  }
+
+  /* Вхід по коду */
+  function loginByCode(code) {
+    code = code.trim();
+    if (!code.startsWith('#')) code = '#' + code;
+    const user = byCode(code);
+    if (!user) {
+      alert('Користувача з таким кодом не знайдено');
+      return null;
+    }
+    currentUserCode = user.code;
+    localStorage.setItem('es_current_code', currentUserCode);
+    return user;
+  }
+
+  /* Выход */
+  function logout() {
+    currentUserCode = null;
+    isAdmin = false;
+    localStorage.removeItem('es_current_code');
+    renderRegisterView();
+    hide($('adminPanel'));
+  }
+
+  /* Пополнение заявки */
+  function createTopupRequest(amount) {
+    if (!currentUserCode) return alert('Ви не увійшли');
+    amount = Number(amount);
+    if (isNaN(amount) || amount <= 0) {
+      alert('Введіть коректну суму');
+      return;
+    }
+    DB.topups.push({
+      id: Date.now(),
+      code: currentUserCode,
+      amount,
+      processed: false,
+      date: now()
+    });
+    saveData();
+    alert('Заявка на поповнення створена. Очікуйте підтвердження адміна.');
+  }
+
+  /* Подписки (для примера) */
+  function subscribe(type) {
+    alert(`Підписка ${type} - поки не реалізовано.`);
+  }
+
+  /* Показываем историю */
+  function showUserHistory() {
+    if (!currentUserCode) return alert('Ви не увійшли');
+    const user = byCode(currentUserCode);
+    if (!user) return alert('Користувача не знайдено');
+    showHistoryModal(user);
+  }
+
+  /* Показать QR код для пользователя */
+  function showUserQR() {
+    if (!currentUserCode) return alert('Ви не увійшли');
+    showQRModal(currentUserCode);
+  }
+
+  /* Отобразить бонусы и рефералов */
+  function showBonusInfo() {
+    if (!currentUserCode) return alert('Ви не увійшли');
+    const user = byCode(currentUserCode);
+    if (!user) return alert('Користувача не знайдено');
+
+    const inviterCodes = DB.users.filter(u => u.history.some(h => h.type.includes('Реферальний бонус (+10 грн)') && u.code !== currentUserCode));
+    const html = `
+      <p><strong>Ваш код:</strong> ${user.code}</p>
+      <p><strong>Баланс:</strong> ${fmt(user.balance)}</p>
+      <p>За перше поповнення – бонус 10 грн.</p>
+      <p>За кожного друга, який використає ваш код, ви отримуєте 10 грн.</p>
+      <p>Використайте ваш код, щоб запросити друзів: <strong>${user.code}</strong></p>
+    `;
+    modalContent.innerHTML = html;
+    show(modal);
+  }
+
+  /* Сканирование QR не реализуемо в чистом HTML/JS без сервера или внешнего API */
+
+  /* Инициализация */
+  function init() {
+    DB = loadData();
+
+    if (currentUserCode && byCode(currentUserCode)) {
+      renderUserView(currentUserCode);
+    } else {
+      renderRegisterView();
+    }
+
+    // События
+
+    $('btnReg').onclick = () => {
+      const name = $('regName').value;
+      const phone = $('regPhone').value;
+      const invite = $('regInvite').value;
+      const user = registerUser(name, phone, invite);
+      if (user) renderUserView(user.code);
+    };
+
+    $('btnUseCode').onclick = () => {
+      const code = prompt('Введіть ваш унікальний код (4 цифри з #)');
+      if (!code) return;
+      const user = loginByCode(code);
+      if (user) renderUserView(user.code);
+    };
+
+    $('btnLogout').onclick = () => {
+      logout();
+    };
+
+    $('btnTopup').onclick = () => {
+      const sumStr = prompt('Введіть суму для поповнення (грн)');
+      if (!sumStr) return;
+      createTopupRequest(sumStr);
+    };
+
+    $('btnHistory').onclick = () => {
+      showUserHistory();
+    };
+
+    $('btnQR').onclick = () => {
+      showUserQR();
+    };
+
+    $('btnSubscribeWeek').onclick = () => subscribe('щотижнева');
+    $('btnSubscribeMonth').onclick = () => subscribe('щомісячна');
+
+    $('btnShare').onclick = () => showBonusInfo();
+
+    $('btnAdminLogin').onclick = () => {
+      const pass = prompt('Введіть адмін-код');
+      if (pass === 'admin123') {
+        isAdmin = true;
+        renderAdminPanel();
+      } else {
+        alert('Невірний адмін-код');
+      }
+    };
+
+    $('btnAdminLogout').onclick = () => {
+      isAdmin = false;
+      hide($('adminPanel'));
+    };
+  }
+
+  init();
+})();
+</script>
+
+</body>
+</html>
