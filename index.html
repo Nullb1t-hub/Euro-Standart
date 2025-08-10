@@ -14,9 +14,6 @@
 <!-- QRCode library -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
-<!-- HTML5 QR scanner library (минимальное подключение парой строк) -->
-<script src="https://unpkg.com/html5-qrcode@2.3.7/minified/html5-qrcode.min.js"></script>
-
 <style>
   :root {
     --blue-light: #3b82f6;
@@ -210,9 +207,6 @@
           <div id="usersList" class="max-h-64 overflow-y-auto rounded border border-blue-300 p-3 space-y-3 bg-white"></div>
         </div>
 
-        <!-- кнопка сканера (добавлена минимально) -->
-        <button id="btnScanQR" class="btn-outline w-full">Сканувати QR</button>
-
         <button id="btnAdminLogout" class="btn-outline w-full">Вийти з адмінки</button>
       </div>
     </aside>
@@ -227,33 +221,6 @@
   <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-lg max-h-[80vh] overflow-y-auto relative">
     <div id="modalContent"></div>
     <button id="modalClose" class="btn-outline mt-6 w-full">Закрити</button>
-  </div>
-</div>
-
-<!-- -- Модал для сканера (добавление минимальное) -->
-<div id="scanModal" class="fixed inset-0 bg-black/40 flex items-center justify-center p-4 hidden z-50">
-  <div class="bg-white rounded-2xl p-6 max-w-lg w-full text-center shadow-lg relative">
-    <h3 class="text-xl font-bold mb-4 text-blue-900">Сканер QR — Адмін</h3>
-    <div id="qrScannerRegion" style="min-height:260px;"></div>
-    <div id="scanInfo" class="text-blue-700 mt-4"></div>
-    <div class="mt-4 flex gap-3">
-      <button id="btnStopScan" class="btn-outline flex-1">Зупинити скан</button>
-      <button id="btnCloseScan" class="btn-primary flex-1">Закрити</button>
-    </div>
-  </div>
-</div>
-
-<!-- Модал: після сканування відображає користувача та дає можливість зарахувати оплату -->
-<div id="scanUserModal" class="fixed inset-0 bg-black/40 flex items-center justify-center p-4 hidden z-60">
-  <div class="bg-white rounded-2xl p-6 max-w-md w-full text-center shadow-lg relative">
-    <h3 id="scanUserTitle" class="text-xl font-bold mb-3 text-blue-900">Користувач</h3>
-    <div id="scanUserContent" class="text-blue-700 mb-3"></div>
-    <input id="adminAdjustAmount" type="number" placeholder="Сума для зарахування (грн)" class="w-full mb-3 p-2 rounded border border-blue-300" />
-    <div class="flex gap-2">
-      <button id="btnAdminConfirmPay" class="btn-primary flex-1">Підтвердити оплату</button>
-      <button id="btnAdminCancelPay" class="btn-outline flex-1">Відхилити</button>
-    </div>
-    <button id="btnCloseScanUser" class="btn-outline w-full mt-3">Закрити</button>
   </div>
 </div>
 
@@ -281,32 +248,9 @@
   const btnCloseQR = $('btnCloseQR');
   btnCloseQR.onclick = () => hide(qrModal);
 
-  /* Сканер элементы */
-  const scanModal = $('scanModal');
-  const qrScannerRegion = $('qrScannerRegion');
-  const scanInfo = $('scanInfo');
-  const btnStopScan = $('btnStopScan');
-  const btnCloseScan = $('btnCloseScan');
-
-  const scanUserModal = $('scanUserModal');
-  const scanUserTitle = $('scanUserTitle');
-  const scanUserContent = $('scanUserContent');
-  const adminAdjustAmount = $('adminAdjustAmount');
-  const btnAdminConfirmPay = $('btnAdminConfirmPay');
-  const btnAdminCancelPay = $('btnAdminCancelPay');
-  const btnCloseScanUser = $('btnCloseScanUser');
-
-  btnStopScan.onclick = () => stopScanner();
-  btnCloseScan.onclick = () => {
-    stopScanner();
-    hide(scanModal);
-  };
-  btnCloseScanUser.onclick = () => hide(scanUserModal);
-
   /* State */
   let currentUserCode = localStorage.getItem('es_current_code') || null;
   let isAdmin = false;
-  let html5QrcodeScanner = null;
 
   /* Load data or init */
   function safeParseJSON(str) {
@@ -557,4 +501,190 @@
       localStorage.setItem('es_current_code', currentUserCode);
       saveData();
       return existingUser;
- 
+    }
+
+    const newCode = genCode();
+
+    // Создаем пользователя
+    const user = {
+      id: Date.now(),
+      name,
+      phone,
+      code: newCode,
+      balance: 0,
+      history: []
+    };
+
+    DB.users.push(user);
+
+    // Бонус за приглашение
+    if (inviteCode) {
+      const inviter = byCode(inviteCode);
+      if (inviter) {
+        inviter.balance += 10;
+        inviter.history.push({ date: now(), type: `Реферальний бонус (+10 грн)`, amount: 10 });
+        user.balance += 10; // и сам приглашенный тоже бонус
+        user.history.push({ date: now(), type: 'Реферальний бонус за вхід (+10 грн)', amount: 10 });
+      }
+    }
+
+    saveData();
+    currentUserCode = newCode;
+    localStorage.setItem('es_current_code', currentUserCode);
+
+    return user;
+  }
+
+  /* Вхід по коду */
+  function loginByCode(code) {
+    code = code.trim();
+    if (!code.startsWith('#')) code = '#' + code;
+    const user = byCode(code);
+    if (!user) {
+      alert('Користувача з таким кодом не знайдено');
+      return null;
+    }
+    currentUserCode = user.code;
+    localStorage.setItem('es_current_code', currentUserCode);
+    return user;
+  }
+
+  /* Выход */
+  function logout() {
+    currentUserCode = null;
+    isAdmin = false;
+    localStorage.removeItem('es_current_code');
+    renderRegisterView();
+    hide($('adminPanel'));
+  }
+
+  /* Пополнение заявки */
+  function createTopupRequest(amount) {
+    if (!currentUserCode) return alert('Ви не увійшли');
+    amount = Number(amount);
+    if (isNaN(amount) || amount <= 0) {
+      alert('Введіть коректну суму');
+      return;
+    }
+    DB.topups.push({
+      id: Date.now(),
+      code: currentUserCode,
+      amount,
+      processed: false,
+      date: now()
+    });
+    saveData();
+    alert('Заявка на поповнення створена. Очікуйте підтвердження адміна.');
+  }
+
+  /* Подписки (для примера) */
+  function subscribe(type) {
+    alert(`Підписка ${type} - поки не реалізовано.`);
+  }
+
+  /* Показываем историю */
+  function showUserHistory() {
+    if (!currentUserCode) return alert('Ви не увійшли');
+    const user = byCode(currentUserCode);
+    if (!user) return alert('Користувача не знайдено');
+    showHistoryModal(user);
+  }
+
+  /* Показать QR код для пользователя */
+  function showUserQR() {
+    if (!currentUserCode) return alert('Ви не увійшли');
+    showQRModal(currentUserCode);
+  }
+
+  /* Отобразить бонусы и рефералов */
+  function showBonusInfo() {
+    if (!currentUserCode) return alert('Ви не увійшли');
+    const user = byCode(currentUserCode);
+    if (!user) return alert('Користувача не знайдено');
+
+    const inviterCodes = DB.users.filter(u => u.history.some(h => h.type.includes('Реферальний бонус (+10 грн)') && u.code !== currentUserCode));
+    const html = `
+      <p><strong>Ваш код:</strong> ${user.code}</p>
+      <p><strong>Баланс:</strong> ${fmt(user.balance)}</p>
+      <p>За перше поповнення – бонус 10 грн.</p>
+      <p>За кожного друга, який використає ваш код, ви отримуєте 10 грн.</p>
+      <p>Використайте ваш код, щоб запросити друзів: <strong>${user.code}</strong></p>
+    `;
+    modalContent.innerHTML = html;
+    show(modal);
+  }
+
+  /* Сканирование QR не реализуемо в чистом HTML/JS без сервера или внешнего API */
+
+  /* Инициализация */
+  function init() {
+    DB = loadData();
+
+    if (currentUserCode && byCode(currentUserCode)) {
+      renderUserView(currentUserCode);
+    } else {
+      renderRegisterView();
+    }
+
+    // События
+
+    $('btnReg').onclick = () => {
+      const name = $('regName').value;
+      const phone = $('regPhone').value;
+      const invite = $('regInvite').value;
+      const user = registerUser(name, phone, invite);
+      if (user) renderUserView(user.code);
+    };
+
+    $('btnUseCode').onclick = () => {
+      const code = prompt('Введіть ваш унікальний код (4 цифри з #)');
+      if (!code) return;
+      const user = loginByCode(code);
+      if (user) renderUserView(user.code);
+    };
+
+    $('btnLogout').onclick = () => {
+      logout();
+    };
+
+    $('btnTopup').onclick = () => {
+      const sumStr = prompt('Введіть суму для поповнення (грн)');
+      if (!sumStr) return;
+      createTopupRequest(sumStr);
+    };
+
+    $('btnHistory').onclick = () => {
+      showUserHistory();
+    };
+
+    $('btnQR').onclick = () => {
+      showUserQR();
+    };
+
+    $('btnSubscribeWeek').onclick = () => subscribe('щотижнева');
+    $('btnSubscribeMonth').onclick = () => subscribe('щомісячна');
+
+    $('btnShare').onclick = () => showBonusInfo();
+
+    $('btnAdminLogin').onclick = () => {
+      const pass = prompt('Введіть адмін-код');
+      if (pass === 'admin123') {
+        isAdmin = true;
+        renderAdminPanel();
+      } else {
+        alert('Невірний адмін-код');
+      }
+    };
+
+    $('btnAdminLogout').onclick = () => {
+      isAdmin = false;
+      hide($('adminPanel'));
+    };
+  }
+
+  init();
+})();
+</script>
+
+</body>
+</html>
